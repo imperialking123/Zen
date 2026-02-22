@@ -1,6 +1,6 @@
 import { Flex, Image } from "@chakra-ui/react";
 
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useIdleTimer } from "react-idle-timer/legacy";
 import { useColorModeValue } from "@/components/ui/color-mode";
@@ -9,6 +9,7 @@ import AppNavigatorBig, {
   AppNavigatorSmall,
 } from "./components/ui/app-navigator";
 import { createDialog } from "./dialog/create-dialog";
+import { useEffect } from "react";
 
 const AppTopRibbon = () => {
   const source = useColorModeValue("/black.svg", "/white.svg");
@@ -53,6 +54,16 @@ const AppContainer = () => {
     onIdle: handleOnIdle,
     onActive: handleOnActive,
   });
+
+
+  const isInMainSection = ["/chat", "/moments", "/spaces", "/connections"].some(s => useLocation().pathname.includes(s));
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!isInMainSection) {
+      navigate("chat")
+    }
+  }, [isInMainSection])
 
   return (
     <Flex bg={shelfColor} direction="column" minH="100dvh" h="100dvh">

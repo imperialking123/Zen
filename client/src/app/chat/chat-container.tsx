@@ -10,7 +10,7 @@ const ChatsContainer = () => {
   );
 
   return (
-    <Flex w="full" h="full" roundedTopLeft="15px">
+    <Flex w="full" h="full" roundedTopLeft={{ lg: "15px", md: "15px" }}>
       <ChatSideBar />
 
       <Flex

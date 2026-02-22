@@ -1,10 +1,12 @@
-import { Flex } from "@chakra-ui/react";
+import { Navigate } from "react-router-dom";
+
 
 const HomePageContainer = () => {
+
+  //  Changed Navigation to App because homepage hasn't been made yet 
+
   return (
-    <Flex alignItems="center" justifyContent="center">
-      Home Page
-    </Flex>
+    <Navigate to="/app" />
   );
 };
 export default HomePageContainer;
