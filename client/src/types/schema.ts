@@ -41,7 +41,7 @@ export interface BaseMessage {
   tempId?: string;
   conversationId: string;
   senderId: string;
-  receiverId?: string;
+  receiverId: string;
   status: "sending" | "sent" | "delivered" | "read" | "failed";
   isReplied?: boolean;
   isForwarded?: boolean;

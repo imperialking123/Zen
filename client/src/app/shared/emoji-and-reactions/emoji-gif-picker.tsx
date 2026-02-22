@@ -15,6 +15,7 @@ const EmojiGifPicker = ({
   onGifSelect: ({ gifData }: { gifData: GifData }) => void;
 }) => {
   const [selectedTab, setSelectedTab] = useState<"emoji" | "gif">("emoji");
+  const [showPopOver, setShowPopOver] = useState(false)
 
   const id = useId();
 
@@ -28,8 +29,17 @@ const EmojiGifPicker = ({
     EmojisText: string;
   };
 
+  const handleGifSelect = ({ gifData }: { gifData: GifData }) => {
+    // Close immediately before heavy operations to improve perceived performance
+    setShowPopOver(false);
+    // Defer heavy operations to prevent blocking the UI
+    setTimeout(() => onGifSelect({ gifData }), 0);
+  }
+
   return (
     <Popover.Root
+      open={showPopOver}
+      onOpenChange={(e) => setShowPopOver(e.open)}
       unmountOnExit
       ids={{ trigger: id }}
       positioning={{ offset: { crossAxis: 0, mainAxis: 20 } }}
@@ -114,7 +124,7 @@ const EmojiGifPicker = ({
               {selectedTab === "emoji" && (
                 <EmojiMapping onEmojiSelect={onEmojiSelect} />
               )}
-              {selectedTab === "gif" && <GifsUI onGifSelect={onGifSelect} />}
+              {selectedTab === "gif" && <GifsUI onGifSelect={handleGifSelect} />}
             </Box>
           </Popover.Content>
         </Popover.Positioner>

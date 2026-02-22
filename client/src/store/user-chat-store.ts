@@ -1,6 +1,24 @@
 import { create } from "zustand";
-import type { GifData, IConversation, IMessage } from "../types/schema";
+import type { Attachment, GifData, IConversation, IMessage } from "../types/schema";
 import { axiosInstance } from "@/utils";
+
+
+type sendP2PDefaultMessageType = {
+  textInput: string,
+  attachments: Attachment[]
+  senderId: string;
+  receiverId: string
+  conversationId: string
+  connectionId: string
+}
+
+type sendP2PGifMessageProps = {
+  gifData: GifData;
+  senderId: string;
+  receiverId: string;
+  conversationId: string;
+  connectionId: string
+}
 
 type userChatStoreTypes = {
   conversations: IConversation[];
@@ -24,7 +42,7 @@ type userChatStoreTypes = {
     message: IMessage;
   }) => void;
 
-  updateMessageState: ({
+  updateMessageStatus: ({
     status,
     conversationId,
     tempId,
@@ -68,6 +86,12 @@ type userChatStoreTypes = {
     username: string;
     persistToServer?: boolean;
   }) => void;
+
+  sendP2PDefaultMessage: (props: sendP2PDefaultMessageType) => void
+  addMessageToState: (message: IMessage, conversationId: string) => void
+  updatedMessageOnConvoCreate: ({ message, tempConvoId, receivedConvoData }: { message: IMessage, tempConvoId: string, receivedConvoData: IConversation }) => void
+  updateMessageOnSendComplete: ({ message, conversationId, tempId }: { message: IMessage, conversationId: string, tempId: string }) => void;
+  sendP2PGifMessage: (props: sendP2PGifMessageProps) => void;
 };
 const userChatStore = create<userChatStoreTypes>((set, get) => ({
   conversations: [],
@@ -109,21 +133,21 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
       });
     }
   },
-  updateMessageState: ({ status, conversationId, tempId }) => {
+  updateMessageStatus: ({ status, conversationId, tempId }) => {
     const messages = get().storedMessages[conversationId] || [];
 
     const updatedMessages =
       messages.length > 0
         ? messages.map((msg) => {
-            if (msg._id === tempId) {
-              return {
-                ...msg,
-                status,
-              };
-            } else {
-              return msg;
-            }
-          })
+          if (msg._id === tempId) {
+            return {
+              ...msg,
+              status,
+            };
+          } else {
+            return msg;
+          }
+        })
         : [];
 
     set((s) => {
@@ -137,7 +161,7 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
   },
 
   forwardMessage: async ({ conversationIds, messageContent }) => {
-    const updateMessageState = get().updateMessageState;
+    const updateMessageStatus = get().updateMessageStatus;
     try {
       const res = await axiosInstance.post<{
         message: string;
@@ -151,7 +175,7 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
 
       resData.data.forEach((r) => {
         const { conversationId } = r;
-        updateMessageState({
+        updateMessageStatus({
           conversationId: conversationId,
           tempId: messageContent._id,
           status: "sent",
@@ -159,7 +183,7 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
       });
     } catch (error) {
       conversationIds.forEach((id) => {
-        updateMessageState({
+        updateMessageStatus({
           status: "failed",
           tempId: messageContent._id,
           conversationId: id,
@@ -175,15 +199,15 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     const updatedMessages =
       allMessages.length > 0
         ? allMessages
-            .filter((msg) => msg._id !== messageId) // Remove the message itself
-            .map((msg) => {
-              // Remove replyTo if it references the deleted message
-              if (msg.replyTo?._id === messageId) {
-                const { replyTo, ...messageWithoutReply } = msg;
-                return messageWithoutReply as IMessage;
-              }
-              return msg;
-            })
+          .filter((msg) => msg._id !== messageId) // Remove the message itself
+          .map((msg) => {
+            // Remove replyTo if it references the deleted message
+            if (msg.replyTo?._id === messageId) {
+              const { replyTo, ...messageWithoutReply } = msg;
+              return messageWithoutReply as IMessage;
+            }
+            return msg;
+          })
         : [];
     set((S) => {
       return {
@@ -268,6 +292,249 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
         });
     }
   },
-}));
+
+  sendP2PDefaultMessage: async (props) => {
+    const { textInput, attachments, senderId, conversationId, receiverId, connectionId } = props
+
+
+    if ((!textInput || textInput.trim().length === 0) && (!attachments || attachments.length === 0)) return;
+
+    const msgTempId = crypto.randomUUID().slice(0, 15)
+
+
+
+    const date = new Date().toISOString()
+    const newMessage: IMessage = {
+      type: "default",
+      receiverId: receiverId,
+      senderId: senderId,
+      createdAt: date,
+      updatedAt: date,
+      conversationId,
+      _id: msgTempId,
+      tempId: msgTempId,
+      status: "sending",
+    }
+
+    if (textInput.length > 0) {
+      newMessage.text = textInput
+    }
+
+    if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+      newMessage["attachments"] = attachments
+    }
+
+    // Update Message To State.
+    get().addMessageToState(newMessage, conversationId)
+
+    let getConvo = get().conversations.find((p) => p._id === conversationId)
+    /*---------------- */
+
+    // Settle Conversation Wall by Getting and updating state
+    if (!getConvo || getConvo.isTemp) {
+      try {
+
+        const convoGetRes = await axiosInstance.post<IConversation>("/conversations/create", {
+          connectionId,
+        });
+
+        getConvo = convoGetRes.data
+
+
+        set((s) => ({
+          selectedConversation:
+            s.selectedConversation?._id === conversationId
+              ? convoGetRes.data
+              : s.selectedConversation,
+
+        }));
+      } catch (error) {
+        // Show a UI and force user to refresh
+        console.log("Failed to retrieve convo Data. Something Went Wrong")
+        get().updateMessageStatus({ status: "failed", conversationId, tempId: msgTempId, })
+
+      }
+    }
+    if (!getConvo) {
+      get().updateMessageStatus({ status: "failed", conversationId, tempId: msgTempId, })
+      return
+    }
+
+    const formData = new FormData()
+
+    formData.append("receiverId", newMessage.receiverId)
+    formData.append("conversationId", newMessage.conversationId)
+    formData.append("type", "default")
+
+    if (textInput && textInput.length > 0) {
+      formData.append("text", textInput)
+    }
+
+    if (attachments && attachments.length > 0) {
+      for (const attachment of attachments) {
+        if (attachment.file) {
+          formData.append("attachment", attachment.file);
+        }
+      }
+
+    }
+
+
+    try {
+      const sendMsgRes = await axiosInstance.post("/messages/send", formData)
+      get().updateMessageOnSendComplete({ message: sendMsgRes.data, conversationId: getConvo._id, tempId: msgTempId })
+    } catch (error) {
+      console.log("Message Send Failed Show UI")
+      return
+    }
+
+
+  },
+
+  addMessageToState(message, conversationId) {
+    set((s) => {
+      const storeMessages = s.storedMessages[conversationId];
+      if (!storeMessages?.length) return s;
+
+      const msgIndex = storeMessages.findIndex((m) => m._id === message._id);
+
+      // message doesn't exist, add it
+      if (msgIndex === -1) return {
+        storedMessages: {
+          ...s.storedMessages,
+          [conversationId]: [...storeMessages, message],
+        },
+      };
+
+      // message exists, replace it
+      const updatedMessages = [...storeMessages];
+      updatedMessages[msgIndex] = message;
+
+      return {
+        storedMessages: {
+          ...s.storedMessages,
+          [conversationId]: updatedMessages,
+        },
+      };
+    });
+  },
+
+  updatedMessageOnConvoCreate: ({ message, tempConvoId, receivedConvoData }) => {
+    set((s) => {
+      const { [tempConvoId]: _, ...remainingMessages } = s.storedMessages;
+      const storeMessages = remainingMessages[receivedConvoData._id] || [];
+
+      const msgIndex = storeMessages.findIndex((m) => m._id === message._id);
+
+      const updatedMessages = [...storeMessages];
+      if (msgIndex === -1) {
+        updatedMessages.push(message);
+      } else {
+        updatedMessages[msgIndex] = message;
+      }
+
+      return {
+        storedMessages: {
+          ...remainingMessages,
+          [receivedConvoData._id]: updatedMessages,
+        },
+      };
+    });
+  },
+
+  updateMessageOnSendComplete: ({ message, conversationId, tempId }) => {
+    set((s) => {
+      const messages = s.storedMessages[conversationId] || [];
+
+      const messageIndex = messages.findIndex((msg) => msg._id === tempId || msg.tempId === tempId);
+
+      if (messageIndex === -1) return s;
+
+      const updatedMessages = [...messages];
+      updatedMessages[messageIndex] = message;
+
+      return {
+        storedMessages: {
+          ...s.storedMessages,
+          [conversationId]: updatedMessages,
+        },
+      };
+    });
+  },
+  sendP2PGifMessage: async (props) => {
+ 
+    const { gifData, senderId, conversationId, receiverId, connectionId } = props
+
+
+    if (!gifData || !gifData.preview || !gifData.full) return;
+
+    const msgTempId = crypto.randomUUID().slice(0, 15)
+
+
+
+    const date = new Date().toISOString()
+    const newMessage: IMessage = {
+      type: "gif",
+      receiverId: receiverId,
+      senderId: senderId,
+      createdAt: date,
+      updatedAt: date,
+      conversationId,
+      _id: msgTempId,
+      tempId: msgTempId,
+      status: "sending",
+      gif: gifData
+    }
+
+    
+    // Update Message To State.
+    get().addMessageToState(newMessage, conversationId)
+
+    let getConvo = get().conversations.find((p) => p._id === conversationId)
+    /*---------------- */
+
+    // Settle Conversation Wall by Getting and updating state
+    if (!getConvo || getConvo.isTemp) {
+      try {
+
+        const convoGetRes = await axiosInstance.post<IConversation>("/conversations/create", {
+          connectionId,
+        });
+
+        getConvo = convoGetRes.data
+
+
+        set((s) => ({
+          selectedConversation:
+            s.selectedConversation?._id === conversationId
+              ? convoGetRes.data
+              : s.selectedConversation,
+
+        }));
+      } catch (error) {
+        // Show a UI and force user to refresh
+        console.log("Failed to retrieve convo Data. Something Went Wrong")
+        get().updateMessageStatus({ status: "failed", conversationId, tempId: msgTempId, })
+
+      }
+    }
+    if (!getConvo) {
+      get().updateMessageStatus({ status: "failed", conversationId, tempId: msgTempId, })
+      return
+    }
+
+
+    try {
+      const sendMsgRes = await axiosInstance.post("/messages/send", newMessage)
+      get().updateMessageOnSendComplete({ message: sendMsgRes.data, conversationId: getConvo._id, tempId: msgTempId })
+    } catch (error) {
+      console.log("Message Send Failed Show UI")
+      return
+    }
+
+
+
+  }
+}))
 
 export default userChatStore;

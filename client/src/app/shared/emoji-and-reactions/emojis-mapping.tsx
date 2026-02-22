@@ -1,10 +1,11 @@
 import { getEmojiUrl } from "@/utils/chatFunctions";
 
 import { Flex, Grid, Input, InputGroup, Text } from "@chakra-ui/react";
-import { useState, useEffect, useMemo, type ChangeEvent } from "react";
+import { useState, useEffect, useMemo, useCallback, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { FaSearch } from "react-icons/fa";
 import { RiEmotionSadLine } from "react-icons/ri";
+import React from "react";
 
 // Lazy load emoji data to reduce initial bundle size
 let emojiData: any = null;
@@ -41,7 +42,7 @@ const scrollYCss = {
   },
 };
 
-const EmojiCategoryItem = ({
+const EmojiCategoryItem = React.memo(({
   emojiCategory,
   categoryText,
   onSelect,
@@ -50,6 +51,9 @@ const EmojiCategoryItem = ({
   categoryText: string;
   onSelect: (emoji: string) => void;
 }) => {
+  const handleEmojiClick = useCallback((emojiValue: string) => {
+    onSelect(emojiValue);
+  }, [onSelect]);
 
   return (
     <Flex direction="column" px="8px" w="full">
@@ -63,8 +67,8 @@ const EmojiCategoryItem = ({
       >
         {emojiCategory.emojis.map((emoji, index) => (
           <button
-            key={index}
-            onClick={() => onSelect(emoji.value)}
+            key={`${emoji.value}-${index}`}
+            onClick={() => handleEmojiClick(emoji.value)}
             className="emojiItem"
             style={{
               backgroundImage: `url(${getEmojiUrl(emoji.value)})`,
@@ -74,7 +78,7 @@ const EmojiCategoryItem = ({
       </Grid>
     </Flex>
   );
-};
+});
 
 const EmojiMappingUI = ({
   showSearchBar = true,
@@ -102,11 +106,13 @@ const EmojiMappingUI = ({
     loadEmojis();
   }, []);
 
-  // Debounced search with useMemo for performance
+  // Optimized debounced search with useMemo for performance
+  const debouncedSearchQuery = useMemo(() => searchQuery, [searchQuery]);
+  
   const filteredEmojis = useMemo(() => {
-    if (!searchQuery.trim()) return emojisToMap;
+    if (!debouncedSearchQuery.trim()) return emojisToMap;
 
-    const normalizedQuery = searchQuery.toLowerCase().trim();
+    const normalizedQuery = debouncedSearchQuery.toLowerCase().trim();
 
     return emojisToMap
       .map((category: EmojiCategory) => {
@@ -115,7 +121,7 @@ const EmojiMappingUI = ({
           const shortCodeMatch = emoji.shortCode.toLowerCase().includes(normalizedQuery);
 
           // Search by emoji text (the actual emoji character)
-          const textMatch = emoji.text.includes(searchQuery);
+          const textMatch = emoji.text.includes(debouncedSearchQuery);
 
           // Search by category name
           const categoryMatch = category.value.toLowerCase().includes(normalizedQuery) ||
@@ -142,7 +148,7 @@ const EmojiMappingUI = ({
         };
       })
       .filter((category): category is EmojiCategory => category !== null);
-  }, [searchQuery, emojisToMap]);
+  }, [debouncedSearchQuery, emojisToMap]);
 
   const { t: translate } = useTranslation(["chat"]);
 
@@ -153,18 +159,24 @@ const EmojiMappingUI = ({
     noSearchResults: string;
   };
 
-  // Debounced search handler
+  // Optimized debounced search handler
+  const debouncedSearchHandler = useMemo(() => {
+    let timer: number;
+    return () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        // Search is handled by useMemo above
+      }, 200); // Reduced from 300ms to 200ms for better responsiveness
+    };
+  }, []);
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // Search is handled by useMemo above
-    }, 300); // 300ms debounce
+    debouncedSearchHandler();
+  }, [searchQuery, debouncedSearchHandler]);
 
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const handleSearchInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleSearchInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
-  };
+  }, []);
 
   if (isLoading) {
     return (

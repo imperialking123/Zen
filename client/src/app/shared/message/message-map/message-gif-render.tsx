@@ -22,6 +22,8 @@ const MessageGifRender = ({
 }) => {
   const { preview } = gifData;
 
+  
+
   const [isError, setIsError] = useState(false);
   const [showFavouriteButton, setShowFavouriteButton] = useState(false);
   const [longPressTriggered, setLongPressTriggered] = useState(false);
@@ -80,6 +82,7 @@ const MessageGifRender = ({
       userSelect="none"
       minW="250px"
       maxW={{ base: "250px", lg: "320px", md: "300px" }}
+      
       direction="column"
       pos="relative"
       overflow="hidden"
@@ -112,6 +115,7 @@ const MessageGifRender = ({
                 objectFit: "cover",
                 borderRadius: "5px",
                 pointerEvents: "none",
+                maxHeight: "250px"
               }}
             />
 

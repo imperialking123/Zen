@@ -5,10 +5,11 @@ import {
   handleGetAllMessages,
   handleReactToMesssage,
   handleSendMessage,
-  handleUploadAttachment,
 } from "../controller/messageController.js";
 import multer from "multer";
 import ProtectRoute from "../middleware/protectUser.js";
+
+import UploadFilesMiddleWare from '../middleware/upload-files.js'
 
 const messageRoute = Router();
 
@@ -54,17 +55,6 @@ const limits = {
 
 const upload = multer({ storage, fileFilter, limits });
 
-messageRoute.post(
-  "/upload/attachments",
-  upload.fields([
-    {
-      name: "attachment",
-      maxCount: MAX_ATTACHMENT,
-    },
-  ]),
-  ProtectRoute,
-  handleUploadAttachment,
-);
 
 messageRoute.get(
   "/get/all/:conversationId",
@@ -72,7 +62,12 @@ messageRoute.get(
   handleGetAllMessages,
 );
 
-messageRoute.post("/send", ProtectRoute, handleSendMessage);
+messageRoute.post("/send", ProtectRoute, upload.fields([
+  {
+    name: "attachment",
+    maxCount: MAX_ATTACHMENT,
+  },
+]), UploadFilesMiddleWare, handleSendMessage);
 messageRoute.post("/forward", ProtectRoute, handleForwardMessage);
 
 messageRoute.delete("/delete", ProtectRoute, handleDeleteMessage);

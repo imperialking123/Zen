@@ -11,7 +11,7 @@ const credentials = {
 const imageKitInstance = new ImageKit({
   publicKey: credentials.publicKey,
   privateKey: credentials.privateKey,
-  urlEndpoint: credentials.urlEndpoint,
+  urlEndpoint: credentials.urlEndpoint, 
 });
 
 export default imageKitInstance;

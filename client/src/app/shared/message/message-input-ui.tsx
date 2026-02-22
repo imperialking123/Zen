@@ -11,11 +11,7 @@ import userChatStore from "@/store/user-chat-store";
 import userAuthStore from "@/store/user-auth-store";
 import { createDialog } from "@/app/dialog/create-dialog";
 import AttachmentLimitUI from "@/app/dialog/ui/max-attachment-ui";
-import {
-  removeInitiatedReply,
-  sendGifMessage,
-  sendMessage,
-} from "@/utils/chatFunctions";
+import { removeInitiatedReply } from "@/utils/chatFunctions";
 import FileTooLargeUI from "@/app/dialog/ui/file-too-large";
 import FileInvalidUI from "@/app/dialog/ui/file-invalid-ui";
 import { useTranslation } from "react-i18next";
@@ -380,17 +376,23 @@ const MessageInputUI = ({ inputPlaceHolder }: { inputPlaceHolder: string }) => {
     }
     setAttachments([]);
 
-    // 3. Pass the captured variables, NOT the state
-    void sendMessage(
-      input,
-      atts,
-      authUser?._id,
-      selectedConversation?.otherUser._id,
-      selectedConversation?._id,
-      selectedConversation?.connectionId,
-    );
 
-    setTimeout(() => (isSendingRef.current = false), 500); // Increased slightly for safety
+    if (!authUser) return
+    if (!selectedConversation) return
+    if (!selectedConversation.connectionId) return
+    void userChatStore.getState().sendP2PDefaultMessage({
+      attachments: atts,
+      textInput: input,
+      senderId: authUser._id,
+      receiverId: selectedConversation.otherUser._id,
+      connectionId: selectedConversation.connectionId,
+      conversationId: selectedConversation._id
+    })
+
+
+
+
+    setTimeout(() => (isSendingRef.current = false), 500);
   };
 
   const { t: translate } = useTranslation(["chat"]);
@@ -719,16 +721,19 @@ const MessageInputUI = ({ inputPlaceHolder }: { inputPlaceHolder: string }) => {
   };
 
   const handleOnGifSelect = ({ gifData }: { gifData: GifData }) => {
+    if (!selectedConversation || !selectedConversation.connectionId || !authUser) return;
+
+    void userChatStore.getState().sendP2PGifMessage({
+      gifData,
+      connectionId: selectedConversation.connectionId,
+      senderId: authUser._id,
+      conversationId: selectedConversation._id,
+      receiverId: selectedConversation.otherUser._id
+    })
+
     if (textAreaRef.current) {
       textAreaRef.current.focus();
     }
-    sendGifMessage({
-      gifData: gifData,
-      connectionId: selectedConversation?.connectionId,
-      senderId: authUser?._id,
-      conversationId: selectedConversation?._id,
-      receiverId: selectedConversation?.otherUser._id,
-    });
   };
 
   const isReplyIniated = !!replyInitiated;

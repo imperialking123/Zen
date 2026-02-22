@@ -24,16 +24,36 @@ const GifCategoryItem = React.memo(React.forwardRef<HTMLDivElement, {
   isVisible,
 }, ref) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
     if (videoRef.current) {
-      if (isVisible) {
-        videoRef.current.play();
-      } else {
+      if (isVisible && !hasLoaded) {
+        // Only play if visible and not previously loaded
+        videoRef.current.play().then(() => {
+          setHasLoaded(true);
+        }).catch(() => {
+          // Handle autoplay policy violations gracefully
+        });
+      } else if (isVisible && hasLoaded) {
+        // Resume if already loaded and visible
+        videoRef.current.play().catch(() => {});
+      } else if (!isVisible && hasLoaded) {
+        // Pause but don't unload if already loaded
         videoRef.current.pause();
       }
     }
-  }, [isVisible]);
+  }, [isVisible, hasLoaded]);
+
+  // Cleanup video resources only on component unmount
+  useEffect(() => {
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.src = '';
+      }
+    };
+  }, []);
 
   return (
     <Flex ref={ref} rounded="4px" overflow="hidden" pos="relative" w="full" h="105px">
@@ -56,14 +76,15 @@ const GifCategoryItem = React.memo(React.forwardRef<HTMLDivElement, {
       >
         <Text>{name}</Text>
       </Flex>
-      {isVisible ? (
+      {isVisible || hasLoaded ? (
         <video
           ref={videoRef}
-          autoPlay
+          autoPlay={isVisible}
           loop
           muted
           playsInline
           src={preview}
+          preload="metadata"
           style={{
             width: "100%",
             height: "100%",
@@ -94,16 +115,36 @@ const GifItem = React.memo(React.forwardRef<HTMLDivElement, {
 }, ref) => {
   const { height, preview } = gifData;
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
     if (videoRef.current) {
-      if (isVisible) {
-        videoRef.current.play();
-      } else {
+      if (isVisible && !hasLoaded) {
+        // Only play if visible and not previously loaded
+        videoRef.current.play().then(() => {
+          setHasLoaded(true);
+        }).catch(() => {
+          // Handle autoplay policy violations gracefully
+        });
+      } else if (isVisible && hasLoaded) {
+        // Resume if already loaded and visible
+        videoRef.current.play().catch(() => {});
+      } else if (!isVisible && hasLoaded) {
+        // Pause but don't unload if already loaded
         videoRef.current.pause();
       }
     }
-  }, [isVisible]);
+  }, [isVisible, hasLoaded]);
+
+  // Cleanup video resources only on component unmount
+  useEffect(() => {
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.src = '';
+      }
+    };
+  }, []);
 
   return (
     <Flex
@@ -114,14 +155,15 @@ const GifItem = React.memo(React.forwardRef<HTMLDivElement, {
       h={height}
       className="isLoading"
     >
-      {isVisible ? (
+      {isVisible || hasLoaded ? (
         <video
           ref={videoRef}
-          autoPlay
+          autoPlay={isVisible}
           loop
           muted
           playsInline
           src={preview}
+          preload="metadata"
           style={{
             width: "100%",
             height: "100%",
@@ -191,24 +233,21 @@ const GifsUI = ({
 
       if (results.isError) {
         // Show error UI: "Something went wrong"
-        setIsLoadingGifs(false);
         setLoadedGifs([]);
         setGifError(true); // Add this state
       } else if (results.gifData.length === 0) {
         // Show "No GIFs found"
-        setIsLoadingGifs(false);
         setLoadedGifs([]);
         setGifError(false);
       } else {
-        setIsLoadingGifs(false);
         setLoadedGifs(results.gifData);
         setGifError(false);
       }
-    }, 800),
+    }, 500), // Reduced from 800ms for better responsiveness
     [],
   );
 
-  // Intersection Observer setup
+  // Intersection Observer setup with persistent video loading
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -219,16 +258,15 @@ const GifsUI = ({
             if (id) {
               if (entry.isIntersecting) {
                 newSet.add(id);
-              } else {
-                newSet.delete(id);
               }
+              // Don't remove from set when not intersecting to keep videos loaded
             }
           });
           return newSet;
         });
       },
       {
-        rootMargin: '50px', // Start loading 50px before element comes into view
+        rootMargin: '150px', // Increased margin for earlier preloading
         threshold: 0.1,
       }
     );
@@ -239,6 +277,11 @@ const GifsUI = ({
       }
     };
   }, []);
+
+  // Clear visible videos when search query changes to prevent memory buildup
+  useEffect(() => {
+    setVisibleVideoIds(new Set());
+  }, [searchQuery]);
 
   // Observe elements when they mount/unmount
   useEffect(() => {
@@ -267,7 +310,7 @@ const GifsUI = ({
     }
   };
 
-  const handleCategoryClick = async ({
+  const handleCategoryClick = useCallback(async ({
     value,
     name,
   }: {
@@ -286,9 +329,9 @@ const GifsUI = ({
       setLoadedGifs(results.gifData); // Could be empty array
       setGifError(false);
     }
-  };
+  }, []);
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
     setSearchQuery(value);
     if (!value || value.length === 0) {
@@ -297,12 +340,12 @@ const GifsUI = ({
     }
     setIsLoadingGifs(true);
     debounceSearch(value);
-  };
+  }, [debounceSearch]);
 
-  const handleRemoveSearch = () => {
+  const handleRemoveSearch = useCallback(() => {
     setSearchQuery("");
     setLoadedGifs([]);
-  };
+  }, []);
 
   return (
     <Flex
