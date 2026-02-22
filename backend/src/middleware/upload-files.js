@@ -65,7 +65,7 @@ const UploadFilesMiddleWare = async (req, res, next) => {
 
         const files = req?.files
 
-        const attachments = files.attachment
+        const attachments = files?.attachment
 
 
 

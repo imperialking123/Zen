@@ -12,6 +12,14 @@ type sendP2PDefaultMessageType = {
   connectionId: string
 }
 
+type sendP2PGifMessageProps = {
+  gifData: GifData;
+  senderId: string;
+  receiverId: string;
+  conversationId: string;
+  connectionId: string
+}
+
 type userChatStoreTypes = {
   conversations: IConversation[];
   selectedConversation: IConversation | null;
@@ -83,6 +91,7 @@ type userChatStoreTypes = {
   addMessageToState: (message: IMessage, conversationId: string) => void
   updatedMessageOnConvoCreate: ({ message, tempConvoId, receivedConvoData }: { message: IMessage, tempConvoId: string, receivedConvoData: IConversation }) => void
   updateMessageOnSendComplete: ({ message, conversationId, tempId }: { message: IMessage, conversationId: string, tempId: string }) => void;
+  sendP2PGifMessage: (props: sendP2PGifMessageProps) => void;
 };
 const userChatStore = create<userChatStoreTypes>((set, get) => ({
   conversations: [],
@@ -451,6 +460,80 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
         },
       };
     });
+  },
+  sendP2PGifMessage: async (props) => {
+ 
+    const { gifData, senderId, conversationId, receiverId, connectionId } = props
+
+
+    if (!gifData || !gifData.preview || !gifData.full) return;
+
+    const msgTempId = crypto.randomUUID().slice(0, 15)
+
+
+
+    const date = new Date().toISOString()
+    const newMessage: IMessage = {
+      type: "gif",
+      receiverId: receiverId,
+      senderId: senderId,
+      createdAt: date,
+      updatedAt: date,
+      conversationId,
+      _id: msgTempId,
+      tempId: msgTempId,
+      status: "sending",
+      gif: gifData
+    }
+
+    
+    // Update Message To State.
+    get().addMessageToState(newMessage, conversationId)
+
+    let getConvo = get().conversations.find((p) => p._id === conversationId)
+    /*---------------- */
+
+    // Settle Conversation Wall by Getting and updating state
+    if (!getConvo || getConvo.isTemp) {
+      try {
+
+        const convoGetRes = await axiosInstance.post<IConversation>("/conversations/create", {
+          connectionId,
+        });
+
+        getConvo = convoGetRes.data
+
+
+        set((s) => ({
+          selectedConversation:
+            s.selectedConversation?._id === conversationId
+              ? convoGetRes.data
+              : s.selectedConversation,
+
+        }));
+      } catch (error) {
+        // Show a UI and force user to refresh
+        console.log("Failed to retrieve convo Data. Something Went Wrong")
+        get().updateMessageStatus({ status: "failed", conversationId, tempId: msgTempId, })
+
+      }
+    }
+    if (!getConvo) {
+      get().updateMessageStatus({ status: "failed", conversationId, tempId: msgTempId, })
+      return
+    }
+
+
+    try {
+      const sendMsgRes = await axiosInstance.post("/messages/send", newMessage)
+      get().updateMessageOnSendComplete({ message: sendMsgRes.data, conversationId: getConvo._id, tempId: msgTempId })
+    } catch (error) {
+      console.log("Message Send Failed Show UI")
+      return
+    }
+
+
+
   }
 }))
 

@@ -11,10 +11,7 @@ import userChatStore from "@/store/user-chat-store";
 import userAuthStore from "@/store/user-auth-store";
 import { createDialog } from "@/app/dialog/create-dialog";
 import AttachmentLimitUI from "@/app/dialog/ui/max-attachment-ui";
-import {
-  removeInitiatedReply,
-  sendGifMessage,
-} from "@/utils/chatFunctions";
+import { removeInitiatedReply } from "@/utils/chatFunctions";
 import FileTooLargeUI from "@/app/dialog/ui/file-too-large";
 import FileInvalidUI from "@/app/dialog/ui/file-invalid-ui";
 import { useTranslation } from "react-i18next";
@@ -724,16 +721,19 @@ const MessageInputUI = ({ inputPlaceHolder }: { inputPlaceHolder: string }) => {
   };
 
   const handleOnGifSelect = ({ gifData }: { gifData: GifData }) => {
+    if (!selectedConversation || !selectedConversation.connectionId || !authUser) return;
+
+    void userChatStore.getState().sendP2PGifMessage({
+      gifData,
+      connectionId: selectedConversation.connectionId,
+      senderId: authUser._id,
+      conversationId: selectedConversation._id,
+      receiverId: selectedConversation.otherUser._id
+    })
+
     if (textAreaRef.current) {
       textAreaRef.current.focus();
     }
-    sendGifMessage({
-      gifData: gifData,
-      connectionId: selectedConversation?.connectionId,
-      senderId: authUser?._id,
-      conversationId: selectedConversation?._id,
-      receiverId: selectedConversation?.otherUser._id,
-    });
   };
 
   const isReplyIniated = !!replyInitiated;

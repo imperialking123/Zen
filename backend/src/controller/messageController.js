@@ -37,16 +37,35 @@ export const handleSendMessage = async (req, res) => {
       senderId: user._id,
       receiverId: otherUserId || receiverId,
       conversationId: getConversation._id,
+      type: type,
     }
 
     if (type === "default") {
-      if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+      const hasText = text && typeof text === "string" && text.trim().length > 0;
+      const hasAttachments = attachments && Array.isArray(attachments) && attachments.length > 0;
+
+      if (!hasText && !hasAttachments) {
+        return res.status(400).json({ message: "DEFAULT_MESSAGE_REQUIRES_TEXT_OR_ATTACHMENTS" });
+      }
+
+      if (hasAttachments) {
         messageObj["attachments"] = attachments
       }
 
-      if (text && typeof text === "string" && text.trim().length > 0) {
+      if (hasText) {
         messageObj["text"] = text
       }
+
+    }
+
+    if (type === "gif") {
+      const { id, preview, full } = req?.body?.gif || {}
+
+      if (!id || !preview || !full) {
+        return res.status(400).json({ message: "Invalid gif data" })
+      }
+
+      messageObj.gif = req.body.gif
 
     }
 
