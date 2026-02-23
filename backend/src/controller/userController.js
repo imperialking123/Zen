@@ -137,11 +137,13 @@ export const handleSignup = async (req, res) => {
       return res.status(500).json({ message: tokenResponse.errorMessage });
     }
 
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("ZenChattyVerb", tokenResponse.token, {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 1 month before token expires!
+      maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      sameSite: process.env.NODE_ENV !== "development" ? "Strict" : "none",
-      secure: process.env.NODE_ENV !== "development",
+      sameSite: isProd ? "Lax" : "Lax", // safest default
+      secure: isProd,
       path: "/",
     });
 
@@ -187,14 +189,15 @@ export const handleLogin = async (req, res) => {
       return res.status(500).json({ message: tokenResponse.errorMessage });
     }
 
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("ZenChattyVerb", tokenResponse.token, {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 1 month before token expires!
+      maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      sameSite: process.env.NODE_ENV !== "development" ? "Strict" : "none",
-      secure: process.env.NODE_ENV !== "development",
+      sameSite: isProd ? "Lax" : "Lax", // safest default
+      secure: isProd,
       path: "/",
     });
-
     const { password: pass, ...rest } = user.toObject();
     res.status(200).json({ authUser: rest });
   } catch (error) {

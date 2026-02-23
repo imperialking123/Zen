@@ -61,7 +61,7 @@ const EmojiCategoryItem = React.memo(({
 
       <Grid
         w="full"
-        templateColumns={{ base: "repeat(7, 1fr)", lg: "repeat(8, 1fr)" }}
+        templateColumns="repeat(auto-fill, minmax(45px, 1fr))"
         gap="3px"
         alignItems="center"
       >
@@ -108,7 +108,7 @@ const EmojiMappingUI = ({
 
   // Optimized debounced search with useMemo for performance
   const debouncedSearchQuery = useMemo(() => searchQuery, [searchQuery]);
-  
+
   const filteredEmojis = useMemo(() => {
     if (!debouncedSearchQuery.trim()) return emojisToMap;
 

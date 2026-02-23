@@ -78,7 +78,7 @@ const EmojiGifPicker = ({
         <Popover.Positioner>
           <Popover.Content
             padding="0px"
-            h={{ base: "60dvh", lg: "70dvh", md: "70dvh" }}
+            h={{ base: "65dvh", lg: "70dvh", md: "70dvh" }}
             w={{ base: "98dvw", lg: "35dvw", md: "50dvw" }}
             rounded="10px"
           >
