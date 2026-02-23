@@ -2,7 +2,7 @@ import MediaLoadErrorUI from "@/app/shared/message/media-load-error-ui";
 import { getSource } from "@/app/shared/message/message-map/message-attachment-render";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { Attachment } from "@/types/schema";
-import { Flex, Image, Text, useBreakpointValue } from "@chakra-ui/react";
+import { Flex, Image, Text } from "@chakra-ui/react";
 import { forwardRef, useRef, useState } from "react";
 import { FaPause, FaPlay } from "react-icons/fa";
 import { HiMiniSpeakerWave, HiMiniSpeakerXMark } from "react-icons/hi2";
@@ -60,8 +60,8 @@ const ImagePreview = ({ source }: { source: string | undefined }) => {
       src={source || ""}
       onClick={(e) => e.stopPropagation()}
       onError={() => setIsImageError(true)}
-      maxW="100%"
-      maxH="100%"
+      maxH={{ base: "85dvh", }}
+      maxW={{ base: "98dvw", lg: "90dvw" }}
       w="auto"
       h="auto"
       objectFit="contain"
@@ -92,8 +92,7 @@ const VideoPreview = ({
 
   const [showControlTimer, setShowControlTimer] = useState<number | null>(null);
 
-  const height = useBreakpointValue({ base: "100%", lg: "550px" });
-  const width = useBreakpointValue({ base: "100%", lg: "400px" });
+
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const sliderRef = useRef<HTMLInputElement>(null);
@@ -199,8 +198,8 @@ const VideoPreview = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       ref={containerRef}
-      maxW={width}
-      maxH={height}
+      maxH={{ base: "85dvh", }}
+      maxW={{ base: "98dvw", lg: "90dvw" }}
       alignItems="center"
       justifyContent="center"
       pos="relative"
