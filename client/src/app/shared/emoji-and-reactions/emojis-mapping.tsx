@@ -64,7 +64,6 @@ const EmojiCategoryItem = React.memo(({
         templateColumns="repeat(auto-fill, minmax(45px, 1fr))"
         gap="3px"
         alignItems="center"
-        bg="red"
       >
         {emojiCategory.emojis.map((emoji, index) => (
           <button
