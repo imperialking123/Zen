@@ -1,64 +1,39 @@
-import { Tooltip } from "@/components/ui/tooltip";
 import type { GifData } from "@/types";
 import type { IUser } from "@/types/schema";
 import { formatDateForTooltip } from "@/utils/chatFunctions";
 import { Avatar, Flex, Text } from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
 import { FaX } from "react-icons/fa6";
-import { HiReply } from "react-icons/hi";
-import { LuExternalLink } from "react-icons/lu";
-import { PiLinkSimpleBold } from "react-icons/pi";
 import { createDialog } from "../create-dialog";
 import { useState } from "react";
 import MediaLoadErrorUI from "@/app/shared/message/media-load-error-ui";
 
-function Button({
-  children,
-  content,
-  caseText,
-  clickHander,
-}: {
-  children: React.ReactNode;
-  content: string;
-  caseText: "forward" | "openInBrowser" | "copyLink";
-  clickHander: (caseText: "forward" | "openInBrowser" | "copyLink") => void;
-}) {
+const GifVideoPlayer = ({ gifData }: { gifData: GifData }) => {
+  const [isError, setIsError] = useState(false);
+
+  if (isError) {
+    return <MediaLoadErrorUI />;
+  }
+
   return (
-    <Tooltip
-      showArrow
-      contentProps={{
-        padding: "8px",
-        rounded: "lg",
-        css: {
-          "--tooltip-bg": "colors.gray.900",
-          color: "white",
-        },
+    <video
+      autoPlay
+      loop
+      muted
+      playsInline
+      src={gifData.full}
+      onError={() => setIsError(true)}
+      style={{
+        maxWidth: "80vw",
+        maxHeight: "70vh",
+        width: "auto",
+        height: "auto",
+        objectFit: "contain",
+        borderRadius: "8px",
+        pointerEvents: "none",
       }}
-      content={content}
-    >
-      <Flex
-        onClick={(e) => {
-          e.stopPropagation();
-          clickHander(caseText);
-        }}
-        boxSize="33px"
-        alignItems="center"
-        justifyContent="center"
-        transition="0.5s ease"
-        bg="transparent"
-        borderColor="gray.600"
-        border="1px solid transparent"
-        _hover={{
-          bg: "gray.700",
-          borderColor: "gray.600",
-        }}
-        rounded="lg"
-      >
-        {children}
-      </Flex>
-    </Tooltip>
+    />
   );
-}
+};
 
 const GifFullScreenPreviewUI = ({
   senderProfile,
@@ -74,34 +49,6 @@ const GifFullScreenPreviewUI = ({
     createDialog.close(id);
   };
 
-  const handleForward = () => {};
-  const handleOpenInBrowser = () => {};
-
-  const clickHandler = (caseText: "forward" | "openInBrowser" | "copyLink") => {
-    switch (caseText) {
-      case "forward":
-        handleForward();
-        break;
-      case "openInBrowser":
-        handleOpenInBrowser();
-        break;
-    }
-  };
-
-  const { t: translate } = useTranslation(["chat"]);
-
-  const { forward, closeText, openInBrowser, copyLink } = translate(
-    "gifPreview",
-  ) as unknown as {
-    forward: string;
-    closeText: string;
-    openInBrowser: string;
-    copyLink: string;
-  };
-
-  const [videoDetails, setVideoDetails] = useState({
-    isLoadError: false,
-  });
 
   return (
     <Flex
@@ -145,74 +92,23 @@ const GifFullScreenPreviewUI = ({
 
         <Flex alignItems="center" gap="10px">
           <Flex
+            onClick={handleExit}
             border="1px solid"
             borderColor="gray.700"
-            gap="2px"
-            p="3px"
-            rounded="xl"
+            boxSize="40px"
+            alignItems="center"
+            justifyContent="center"
+            transition="0.5s ease"
             bg="gray.800"
-          >
-            <Button
-              clickHander={clickHandler}
-              caseText="forward"
-              content={forward}
-            >
-              <HiReply
-                style={{
-                  transform: "scaleX(-1)",
-                }}
-                size={19}
-              />
-            </Button>
-
-            <Button
-              clickHander={clickHandler}
-              caseText="openInBrowser"
-              content={openInBrowser}
-            >
-              <LuExternalLink size={19} />
-            </Button>
-
-            <Button
-              clickHander={clickHandler}
-              caseText="copyLink"
-              content={copyLink}
-            >
-              <PiLinkSimpleBold />
-            </Button>
-          </Flex>
-
-          <Tooltip
-            showArrow
-            contentProps={{
-              padding: "8px",
-              rounded: "lg",
-              css: {
-                "--tooltip-bg": "colors.gray.900",
-                color: "white",
-              },
+            _hover={{
+              bg: "gray.700",
+              border: "1px solid",
+              borderColor: "gray.500",
             }}
-            content={closeText}
+            rounded="xl"
           >
-            <Flex
-              onClick={handleExit}
-              border="1px solid"
-              borderColor="gray.700"
-              boxSize="40px"
-              alignItems="center"
-              justifyContent="center"
-              transition="0.5s ease"
-              bg="gray.800"
-              _hover={{
-                bg: "gray.700",
-                border: "1px solid",
-                borderColor: "gray.500",
-              }}
-              rounded="xl"
-            >
-              <FaX />
-            </Flex>
-          </Tooltip>
+            <FaX />
+          </Flex>
         </Flex>
       </Flex>
 
@@ -225,36 +121,7 @@ const GifFullScreenPreviewUI = ({
         w="full"
         h="full"
       >
-        <Flex
-          onClick={(e) => e.stopPropagation()}
-          p="0px"
-          alignItems="center"
-          justifyContent="center"
-          w="100%"
-          h="100%"
-          maxW={{ base: "95%", lg: "45%" }}
-          maxH={{ base: "500px" }}
-        >
-          {!videoDetails.isLoadError && (
-            <video
-              autoPlay
-              muted
-              loop
-              onError={() => {
-                setVideoDetails(() => ({ isLoadError: true }));
-              }}
-              src={gifData.preview}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-                borderRadius: "8px",
-                pointerEvents: "none",
-              }}
-            />
-          )}
-          {videoDetails.isLoadError && <MediaLoadErrorUI />}
-        </Flex>
+        <GifVideoPlayer gifData={gifData} />
       </Flex>
     </Flex>
   );

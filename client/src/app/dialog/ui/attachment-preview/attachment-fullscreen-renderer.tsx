@@ -9,10 +9,10 @@ import {
   Text,
   type MenuSelectionDetails,
 } from "@chakra-ui/react";
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, } from "react";
 import { useTranslation } from "react-i18next";
 import { FaX } from "react-icons/fa6";
-import { HiDownload, HiReply } from "react-icons/hi";
+import { HiDownload } from "react-icons/hi";
 import { IoIosMore } from "react-icons/io";
 import { LuExternalLink, LuLink } from "react-icons/lu";
 import useSlideAction from "@/hooks/use-slide-action";
@@ -24,6 +24,29 @@ import { GoArrowRight } from "react-icons/go";
 import type { Attachment, IUser } from "@/types/schema";
 import { createDialog } from "../../create-dialog";
 import { BsRobot } from "react-icons/bs";
+import { IoCopyOutline } from "react-icons/io5";
+import { getSource } from "@/app/shared/message/message-map/message-attachment-render";
+import { toast } from "sonner";
+
+type AttachmentFullScreenPreviewTranslations = {
+  openInBrowser: string;
+  openFullScreen: string;
+  more: string;
+  close: string;
+  copyLink: string;
+  viewDetails: {
+    filename: string;
+    size: string;
+    text: string;
+  };
+  copyAttachmentId: string;
+  id: string;
+  downloadText: string;
+  copyImageText: string;
+  somethingWentWrongText: string;
+  imageCopiedText: string;
+  copiedText: string
+}
 
 function Button({
   children,
@@ -33,8 +56,8 @@ function Button({
 }: {
   children: React.ReactNode;
   content: string;
-  caseText: "forward" | "openInBrowser" | "saveVideo";
-  clickHander: (caseText: "forward" | "openInBrowser" | "saveVideo") => void;
+  caseText: "copyImage" | "openInBrowser" | "saveVideo";
+  clickHander: (caseText: "copyImage" | "openInBrowser" | "saveVideo") => void;
 }) {
   return (
     <Tooltip
@@ -70,8 +93,6 @@ function Button({
   );
 }
 
-type selectionType = "copyLink" | "copyAttachmentId" | "filename" | "size";
-
 function AttachmentMenu({
   triggerId,
   more,
@@ -82,7 +103,9 @@ function AttachmentMenu({
   attachmentFileName,
   attachmentSize,
   lang,
-  handleOnMenuSelect,
+  currentAttachment,
+  copiedText,
+
 }: {
   triggerId: string;
   more: string;
@@ -97,8 +120,38 @@ function AttachmentMenu({
   attachmentFileName: string;
   lang: string;
   attachmentSize: number;
-  handleOnMenuSelect: (event: MenuSelectionDetails) => void;
+  currentAttachment: Extract<Attachment, { type: "image" | "video" }>;
+  copiedText: string;
+
 }) {
+
+  const handleOnMenuSelect = (e: MenuSelectionDetails) => {
+    const text = e.value[0];
+
+    switch (text) {
+      case "copyLink":
+        if (currentAttachment.filePath) {
+          navigator.clipboard.writeText(generateCDN_URL(
+            currentAttachment.filePath,
+            currentAttachment.mimeType || '',
+            true,
+          ));
+        }
+        break;
+      case "filename":
+        navigator.clipboard.writeText(attachmentFileName);
+        break;
+      case "size":
+        navigator.clipboard.writeText(attachmentSize.toString());
+        break;
+      case "copyAttachmentId":
+        navigator.clipboard.writeText(id);
+        break;
+    }
+
+    toast.success(copiedText);
+  }
+
   return (
     <Menu.Root
       onSelect={handleOnMenuSelect}
@@ -263,32 +316,20 @@ const AttachmentFullScreenUI = ({
   const { t: translate, i18n } = useTranslation(["chat"]);
 
   const {
-    forward,
     more,
     openInBrowser,
     close,
     copyLink,
     copyAttachmentId,
     id,
-    viewDetails,
+    viewDetails, copiedText,
     openFullScreen,
-    saveVideo,
-  } = translate("selectedVisualAttachmentsText") as unknown as {
-    forward: string;
-    openInBrowser: string;
-    openFullScreen: string;
-    more: string;
-    close: string;
-    copyLink: string;
-    saveVideo: string;
-    viewDetails: {
-      filename: string;
-      size: string;
-      text: string;
-    };
-    copyAttachmentId: string;
-    id: string;
-  };
+    somethingWentWrongText,
+    downloadText,
+    copyImageText,
+    imageCopiedText
+  } = translate("selectedVisualAttachmentsText") as unknown as AttachmentFullScreenPreviewTranslations
+
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -314,8 +355,11 @@ const AttachmentFullScreenUI = ({
     slideRightFunction: handleNextAttachment,
   });
 
-  const handleForward = () => {};
   const handleDownload = () => {
+
+
+    console.log("Alert  Download Hit")
+
     if (!currentAttachment) return;
 
     if (!currentAttachment.filePath) return;
@@ -353,13 +397,38 @@ const AttachmentFullScreenUI = ({
     document.body.removeChild(link);
   };
 
+
+  const handleCopyImage = async () => {
+    const url = getSource(
+      currentAttachment.filePath,
+      currentAttachment.previewUrl,
+      currentAttachment.mimeType,
+    );
+
+    if (!url) return
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob()
+
+      await navigator.clipboard.write([
+        new ClipboardItem({ [blob.type]: blob })
+      ]);
+
+      toast.success(imageCopiedText)
+
+    } catch (error) {
+      toast.error(somethingWentWrongText)
+    }
+
+  }
+
+
   const clickHandler = (
-    caseText: "forward" | "openInBrowser" | "saveVideo",
+    caseText: "forward" | "openInBrowser" | "saveVideo" | "copyImage",
   ) => {
     switch (caseText) {
-      case "forward":
-        handleForward();
-        break;
+
+      case "copyImage": handleCopyImage(); break
       case "openInBrowser":
         handleOpenInBrowser();
         break;
@@ -368,16 +437,7 @@ const AttachmentFullScreenUI = ({
     }
   };
 
-  const handleMenuSelect = (event: MenuSelectionDetails) => {
-    const caseText = event.value as selectionType;
 
-    switch (caseText) {
-      case "copyLink":
-      case "copyAttachmentId":
-      case "filename":
-      case "size":
-    }
-  };
 
   const handleExit = () => {
     const id = "showAttachmentId";
@@ -430,28 +490,21 @@ const AttachmentFullScreenUI = ({
             rounded="xl"
             bg="gray.800"
           >
+
+            {currentAttachment.type === "image" &&
+              <Button caseText="copyImage" clickHander={clickHandler} content={copyImageText} >
+                <IoCopyOutline size={17} fontWeight={12} />
+              </Button>}
+
             <Button
               clickHander={clickHandler}
-              caseText="forward"
-              content={forward}
+              caseText="saveVideo"
+              content={downloadText}
             >
-              <HiReply
-                style={{
-                  transform: "scaleX(-1)",
-                }}
-                size={19}
-              />
+              <HiDownload style={{ width: "20px", height: "20px" }} />
             </Button>
 
-            {currentAttachment?.type === "video" && (
-              <Button
-                clickHander={clickHandler}
-                caseText="saveVideo"
-                content={saveVideo}
-              >
-                <HiDownload style={{ width: "20px", height: "20px" }} />
-              </Button>
-            )}
+
 
             <Button
               clickHander={clickHandler}
@@ -462,7 +515,7 @@ const AttachmentFullScreenUI = ({
             </Button>
 
             <AttachmentMenu
-              handleOnMenuSelect={handleMenuSelect}
+              copiedText={copiedText}
               attachmentSize={attachmentSize}
               attachmentFileName={attachmentFileName}
               viewDetails={viewDetails}
@@ -472,6 +525,7 @@ const AttachmentFullScreenUI = ({
               more={more}
               triggerId={triggerId}
               lang={i18n.language}
+              currentAttachment={currentAttachment}
             />
           </Flex>
 

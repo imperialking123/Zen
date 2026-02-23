@@ -1,10 +1,8 @@
-import { AxiosError, isAxiosError } from "axios";
+import {  isAxiosError } from "axios";
 import i18next from "../../i18nextConfig";
 
 import type {
-  Attachment,
   GifData,
-  IConversation,
   IMessage,
 } from "../types/schema";
 import dayjs from "dayjs";
@@ -13,7 +11,6 @@ import isToday from "dayjs/plugin/isToday";
 import isYesterday from "dayjs/plugin/isYesterday";
 import userChatStore from "../store/user-chat-store";
 import { axiosInstance } from ".";
-import { toast } from "sonner";
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
