@@ -2,7 +2,7 @@ import MediaLoadErrorUI from "@/app/shared/message/media-load-error-ui";
 import { getSource } from "@/app/shared/message/message-map/message-attachment-render";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { Attachment } from "@/types/schema";
-import { Flex, Image, Text } from "@chakra-ui/react";
+import { Flex, Image, Text, } from "@chakra-ui/react";
 import { forwardRef, useRef, useState } from "react";
 import { FaPause, FaPlay } from "react-icons/fa";
 import { HiMiniSpeakerWave, HiMiniSpeakerXMark } from "react-icons/hi2";
@@ -60,7 +60,7 @@ const ImagePreview = ({ source }: { source: string | undefined }) => {
       src={source || ""}
       onClick={(e) => e.stopPropagation()}
       onError={() => setIsImageError(true)}
-      maxH={{ base: "85dvh", }}
+      maxH={{ base: "75dvh", }}
       maxW={{ base: "98dvw", lg: "90dvw" }}
       w="auto"
       h="auto"
