@@ -47,7 +47,8 @@
   "openFullScreenText": "FullScreen",
   "downloadText": "Download",
   "selectedVisualAttachmentsText": {
-    "forward": "Forward",
+    "downloadText": "Download",
+    "copyImageText": "Copy Image",
     "more": "More",
     "openInBrowser": "Open in Browser",
     "close": "Close",
@@ -60,7 +61,10 @@
       "filename": "Filename",
       "size": "Size",
       "text": "View Details"
-    }
+    },
+    "imageCopiedText": "Image Copied to Clipboard",
+    "somethingWentWrongText": "Something went wrong.",
+    "copiedText": "Copied"
   },
   "EmojiGifPickerTranslate": {
     "toolTipContent": "Add Emojis and Gifs",
@@ -182,12 +186,8 @@
       }
     }
   },
-  "gifPreview": {
-    "forward": "Forward",
-    "closeText": "Close",
-    "openInBrowser": "Open in Browser",
-    "copyLink": "Copy Link"
-  },
+
+  "copyLink": "Copy Link",
   "MessageReplyUI": {
     "messageDeletedText": "Original message was deleted"
   },
