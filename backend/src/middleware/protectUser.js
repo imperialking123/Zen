@@ -24,6 +24,7 @@ const ProtectRoute = async (req, res, next) => {
       sameSite: "Lax",
       secure: isProd,
       path: "/",
+      domain: isProd ? process.env.COOKIE_DOMAIN : undefined,
     });
       console.log("Error verify jwt", error.message || error);
       return res.status(400).json({ message: "UNAUTHORIZED" });
