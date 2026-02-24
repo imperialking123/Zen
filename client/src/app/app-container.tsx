@@ -56,7 +56,8 @@ const AppContainer = () => {
   });
 
 
-  const isInMainSection = ["/chat", "/moments", "/spaces", "/connections"].some(s => useLocation().pathname.includes(s));
+  const location = useLocation();
+  const isInMainSection = ["/chat", "/moments", "/spaces", "/connections"].some(s => location.pathname.includes(s));
   const navigate = useNavigate()
 
   useEffect(() => {
