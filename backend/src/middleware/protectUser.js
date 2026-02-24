@@ -3,8 +3,8 @@ import User from "../model/userModel.js";
 import Session from "../model/sessionModel.js";
 
 const ProtectRoute = async (req, res, next) => {
-  const isProd = process.env.NODE_ENV === "production";
-  
+
+
   try {
     const cookie = req.cookies.ZenChattyVerb;
     if (!cookie)
@@ -17,15 +17,18 @@ const ProtectRoute = async (req, res, next) => {
     } catch (error) {
 
 
+      const COOKIE_NAME = "ZenChattyVerb"
+
       //Remove cookie since it's useless anyway
-      res.cookie("ZenChattyVerb", "", {
-      maxAge: 0, 
-      httpOnly: true,
-      sameSite: "Lax",
-      secure: isProd,
-      path: "/",
-      domain: isProd ? process.env.COOKIE_DOMAIN : undefined,
-    });
+      const SERVER_STAGE = process.env.SERVER_STAGE
+
+      res.cookie(COOKIE_NAME, "", {
+        maxAge: 0,
+        httpOnly: true,
+        secure: SERVER_STAGE === "prod",
+        sameSite: SERVER_STAGE === "prod" ? "none" : "lax",
+      });
+
       console.log("Error verify jwt", error.message || error);
       return res.status(400).json({ message: "UNAUTHORIZED" });
     }

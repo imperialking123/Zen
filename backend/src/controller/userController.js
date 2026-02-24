@@ -142,12 +142,9 @@ export const handleSignup = async (req, res) => {
     res.cookie("ZenChattyVerb", tokenResponse.token, {
       maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      sameSite: "Lax",
-      secure: isProd,
-      path: "/",
-      domain: isProd ? process.env.COOKIE_DOMAIN : undefined,
+      secure: SERVER_STAGE === "prod",
+      sameSite: SERVER_STAGE === "prod" ? "none" : "lax",
     });
-
     const { password: pass, ...rest } = newUser.toObject();
 
     return res.status(200).json({ authUser: rest });
@@ -195,10 +192,8 @@ export const handleLogin = async (req, res) => {
     res.cookie("ZenChattyVerb", tokenResponse.token, {
       maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      sameSite: "Lax",
-      secure: isProd,
-      path: "/",
-      domain: isProd ? process.env.COOKIE_DOMAIN : undefined,
+      secure: SERVER_STAGE === "prod",
+      sameSite: SERVER_STAGE === "prod" ? "none" : "lax",
     });
     const { password: pass, ...rest } = user.toObject();
     res.status(200).json({ authUser: rest });
