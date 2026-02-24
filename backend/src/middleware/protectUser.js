@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 import User from "../model/userModel.js";
 import Session from "../model/sessionModel.js";
 
+const SERVER_STAGE = process.env.SERVER_STAGE;
+
 const ProtectRoute = async (req, res, next) => {
 
 
@@ -20,7 +22,6 @@ const ProtectRoute = async (req, res, next) => {
       const COOKIE_NAME = "ZenChattyVerb"
 
       //Remove cookie since it's useless anyway
-      const SERVER_STAGE = process.env.SERVER_STAGE
 
       res.cookie(COOKIE_NAME, "", {
         maxAge: 0,

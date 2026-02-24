@@ -9,6 +9,7 @@ import { getPresenseOfPairs } from "../lib/io.js";
 import FavouriteReactions from "../model/favouriteReactionModel.js";
 
 const MAX_SESSIONS = 12;
+const SERVER_STAGE = process.env.SERVER_STAGE;
 
 export const handleSignup = async (req, res) => {
   try {
@@ -137,8 +138,6 @@ export const handleSignup = async (req, res) => {
       return res.status(500).json({ message: tokenResponse.errorMessage });
     }
 
-    const isProd = process.env.NODE_ENV === "production";
-
     res.cookie("ZenChattyVerb", tokenResponse.token, {
       maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
@@ -187,8 +186,6 @@ export const handleLogin = async (req, res) => {
       return res.status(500).json({ message: tokenResponse.errorMessage });
     }
 
-    const isProd = process.env.NODE_ENV === "production";
-
     res.cookie("ZenChattyVerb", tokenResponse.token, {
       maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
@@ -207,10 +204,10 @@ export const handleLogout = async (req, res) => {
   try {
     res.cookie("ZenChattyVerb", "", {
       maxAge: 0,
-      sameSite: "Strict",
+      sameSite: SERVER_STAGE === "prod" ? "none" : "lax",
       expires: new Date(0),
       httpOnly: true,
-      secure: process.env.NODE_ENV !== "development",
+      secure: SERVER_STAGE === "prod",
     });
     res.status(200).json({ message: "Logout Successfully" });
   } catch (error) {
