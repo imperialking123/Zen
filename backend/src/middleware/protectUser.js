@@ -3,6 +3,8 @@ import User from "../model/userModel.js";
 import Session from "../model/sessionModel.js";
 
 const ProtectRoute = async (req, res, next) => {
+  const isProd = process.env.NODE_ENV === "production";
+  
   try {
     const cookie = req.cookies.ZenChattyVerb;
     if (!cookie)
@@ -20,7 +22,7 @@ const ProtectRoute = async (req, res, next) => {
       maxAge: 0, 
       httpOnly: true,
       sameSite: "Lax",
-      secure: process.env.NODE_ENV !== "development",
+      secure: isProd,
       path: "/",
     });
       console.log("Error verify jwt", error.message || error);
