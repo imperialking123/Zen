@@ -145,6 +145,7 @@ export const handleSignup = async (req, res) => {
       sameSite: "Lax",
       secure: isProd,
       path: "/",
+      domain: isProd ? process.env.COOKIE_DOMAIN : undefined,
     });
 
     const { password: pass, ...rest } = newUser.toObject();
@@ -197,6 +198,7 @@ export const handleLogin = async (req, res) => {
       sameSite: "Lax",
       secure: isProd,
       path: "/",
+      domain: isProd ? process.env.COOKIE_DOMAIN : undefined,
     });
     const { password: pass, ...rest } = user.toObject();
     res.status(200).json({ authUser: rest });
