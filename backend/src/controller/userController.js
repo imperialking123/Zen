@@ -142,7 +142,7 @@ export const handleSignup = async (req, res) => {
     res.cookie("ZenChattyVerb", tokenResponse.token, {
       maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      sameSite: isProd ? "Lax" : "Lax", // safest default
+      sameSite: "Lax",
       secure: isProd,
       path: "/",
     });
@@ -194,7 +194,7 @@ export const handleLogin = async (req, res) => {
     res.cookie("ZenChattyVerb", tokenResponse.token, {
       maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      sameSite: isProd ? "Lax" : "Lax", // safest default
+      sameSite: "Lax",
       secure: isProd,
       path: "/",
     });

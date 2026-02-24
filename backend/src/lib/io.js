@@ -73,7 +73,7 @@ export const emitPayloadToOtherSessions = (
   connectedUser.forEach((connected) => {
     const currentSessionId = connected.sessionId.toString();
     const avoidSessionId = sessionIdToAvoid.toString();
-    
+
     if (currentSessionId !== avoidSessionId) {
       const socketId = connected.socketId;
 
@@ -301,17 +301,13 @@ const protectSocket = async (socket, next) => {
   const userSession = await Session.findOne({ _id: sessionId });
 
   if (!userDetails) {
-    console.log(
-      "Attempted connection with id of USER schema with no existing value",
-    );
+    console.log("Connection rejected: No user found for the provided userId.");
     socket.disconnect();
     return;
   }
 
   if (!userSession) {
-    console.log(
-      "Attempted connection with id of SESSION schema with no existing value",
-    );
+    console.log("Connection rejected: No session found for the provided sessionId.");
     socket.disconnect();
     return;
   }

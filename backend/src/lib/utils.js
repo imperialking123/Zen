@@ -16,9 +16,10 @@ export const generateCookieAndSession = async (req, userId) => {
     oneMonthAfter.setMonth(oneMonthAfter.getMonth() + 1);
 
     //Note always add a temp ip in development when creating a cookie
-    const ipLocate = await ipLookupClient.lookup(
-      "2c0f:2a80:a2c:d510:f993:4985:c488:541c",
-    );
+
+    const nodeEnv = process.env.NODE_ENV
+    const getIp = (nodeEnv === "development" || nodeEnv === "dev") ? process.env.PLACE_HOLDER_IP : ip
+    const ipLocate = await ipLookupClient.lookup(getIp);
 
     const isUnknownLocation =
       !ipLocate ||
@@ -64,7 +65,7 @@ export const generateCookieAndSession = async (req, userId) => {
       { userId, sessionId: newSession._id.toString() },
       process.env.JWT_SECRET,
       {
-        expiresIn: "30d", 
+        expiresIn: "30d",
       },
     );
 
