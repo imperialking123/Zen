@@ -19,7 +19,7 @@ const ProtectRoute = async (req, res, next) => {
       res.cookie("ZenChattyVerb", "", {
       maxAge: 0, 
       httpOnly: true,
-      sameSite: process.env.NODE_ENV !== "development" ? "Strict" : "none",
+      sameSite: "Lax",
       secure: process.env.NODE_ENV !== "development",
       path: "/",
     });
