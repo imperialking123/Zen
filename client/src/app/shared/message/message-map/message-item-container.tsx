@@ -655,7 +655,8 @@ const MessageItemContainer = (props: IMessageItemProps) => {
                 )}
 
               {message.type === "gif" && (
-                <MessageGifRender
+                <MessageGifRender 
+                  
                   gifData={message.gif}
                   disPlayGifFullScreen={handleDisplayGifFullScreen}
                 />
