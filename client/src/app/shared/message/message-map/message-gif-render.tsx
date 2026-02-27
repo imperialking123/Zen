@@ -1,162 +1,185 @@
 import type { GifData } from "@/types";
-import { Box, Flex, IconButton, Text } from "@chakra-ui/react";
-import React, { memo, useRef, useState } from "react";
+import { Flex, IconButton, Text, } from "@chakra-ui/react"
+import { useEffect, useRef, useState, } from "react"
 import MediaLoadErrorUI from "../media-load-error-ui";
+import useGif from "@/hooks/use-gif";
 import { FaRegStar, FaStar } from "react-icons/fa";
-import { useTranslation } from "react-i18next";
-import userChatStore from "@/store/user-chat-store";
-import { Tooltip } from "@/components/ui/tooltip";
-import {
-  addGifToFavourite,
-  removeGifFromFavourite,
-} from "@/utils/chatFunctions";
 
-const LONG_PRESS_MS = 450;
+interface GifRendererProps {
+  gifData: GifData,
+  disPlayGifFullScreen: () => void
+}
 
-const MessageGifRender = ({
-  gifData,
-  disPlayGifFullScreen,
-}: {
-  gifData: GifData;
-  disPlayGifFullScreen: () => void;
-}) => {
-  const { preview } = gifData;
+function MessageGifRender({ gifData, disPlayGifFullScreen, }: GifRendererProps) {
 
-  
+  const { full, preview, width, height } = gifData
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const [isError, setIsError] = useState(false);
-  const [showFavouriteButton, setShowFavouriteButton] = useState(false);
-  const [longPressTriggered, setLongPressTriggered] = useState(false);
+  interface GifDetails {
+    isError: boolean;
+    isLoading: boolean;
+    showFavouriteButton: boolean;
+    showFavouriteButtonTimer: number | null;
+  }
 
-  const longPressTimer = useRef<number | null>(null);
+  const [gifDetails, setGifDetails] = useState<GifDetails>({
+    isError: false,
+    isLoading: true,
+    showFavouriteButton: false,
+    showFavouriteButtonTimer: null,
+  });
 
-  const { t } = useTranslation(["chat"]);
+  const { toggleFavourite, isFavourite } = useGif(gifData.id)
 
-  const isFaved = userChatStore((state) =>
-    state.favouriteGifs.some((g) => g.id === gifData.id),
-  );
 
-  const handleFavouriteToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    isFaved ? removeGifFromFavourite(gifData.id) : addGifToFavourite(gifData);
-  };
 
-  /* ---------- POINTER EVENTS (desktop + mobile) ---------- */
+  // Dom bloat is not a problem here . 
+  // will use vitualizer to take components out of dom when not in view.
+  // Increasing overall speed
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-
-    longPressTimer.current = window.setTimeout(() => {
-      setLongPressTriggered(true);
-      setShowFavouriteButton(true);
-    }, LONG_PRESS_MS);
-  };
-
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
+    const observerCallBackHandler = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          videoEl.play().catch(() => { }) // catch prevents uncaught promise error
+        } else {
+          videoEl.pause()
+        }
+      })
     }
 
-    if (!longPressTriggered) {
-      disPlayGifFullScreen();
+    const observer = new IntersectionObserver(observerCallBackHandler, {
+      threshold: 0.6
+    })
+
+    observer.observe(videoEl)
+
+    return () => {
+      observer.disconnect()
     }
 
-    setLongPressTriggered(false);
-  };
+  }, [gifDetails.isLoading]) // re-run when loading finishes
 
-  const handlePointerLeave = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-    setLongPressTriggered(false);
-    setShowFavouriteButton(false);
-  };
+
+  const handleMouseEnter = () => {
+    setGifDetails(d => ({ ...d, showFavouriteButton: true }))
+  }
+
+  const handleMouseLeave = () => {
+    setGifDetails(d => ({ ...d, showFavouriteButton: false }))
+  }
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setGifDetails(d => ({ ...d, showFavouriteButton: !d.showFavouriteButton }))
+  }
+
+
+
+  // Might need this function. will decide after testing on a real device
+
+  // const handleToggleShowFavourite = (e: React.MouseEvent<HTMLDivElement>) => {
+  //   e.stopPropagation();
+  //   e.preventDefault()
+  //   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+
+  //   if (isTouchDevice) {
+  //     setGifDetails((s) => ({ ...s, showFavouriteButton: true }))
+
+  //     if (gifDetails.showFavouriteButtonTimer && typeof gifDetails.showFavouriteButtonTimer === "number") {
+  //       clearTimeout(gifDetails.showFavouriteButtonTimer)
+  //     }
+
+  //     const timer = setTimeout(() => {
+  //       setGifDetails((s) => ({ ...s, showFavouriteButton: true }))
+  //     }, 3000);
+
+  //     setGifDetails((s) => ({ ...s, showFavouriteButtonTimer: timer }))
+  //   }
+  // }
+
+
+
+
 
   return (
-    <Flex
-      tabIndex={0}
-      userSelect="none"
-      minW="250px"
-      maxW={{ base: "250px", lg: "320px", md: "300px" }}
-      
-      direction="column"
-      pos="relative"
-      overflow="hidden"
-      onMouseEnter={() => setShowFavouriteButton(true)}
-      onMouseLeave={() => setShowFavouriteButton(false)}
-    >
-      {!isError ? (
-        <>
-          <Box
+    <Flex direction="column" pr="15px" >
+
+      <Flex onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onContextMenu={handleContextMenu}
+        onClick={disPlayGifFullScreen}
+        // onDoubleClick={handleToggleShowFavourite} 
+        pos="relative"
+        width="fit-content"
+        height="fit-content" overflow="hidden"
+      >
+        {!gifDetails.isError && (
+          <video
+            draggable={false}
+            ref={videoRef}
+            loop
+            muted
+            onError={() => setGifDetails(e => ({ ...e, isError: true, isLoading: false }))}
+            onLoadedData={() => setGifDetails(e => ({ ...e, isLoading: false }))}
+            src={preview ? full : full}
+
+            style={{
+              width: width ? `${width}px` : "auto",
+              height: height ? `${height}px` : "auto",
+
+              objectFit: "fill",
+              borderRadius: "6px",
+              pointerEvents: "none",
+              display: gifDetails.isLoading ? "none" : "block"
+            }} />
+        )}
 
 
-            w="100%"
-            pos="relative"
-            overflow="hidden"
-            borderRadius="md"
-            flexShrink={0}
-            onPointerDown={handlePointerDown}
-            onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerLeave}
-          >
-            <video
-              onError={() => setIsError(true)}
-              autoPlay
-              loop
-              muted
-              playsInline
-              src={preview}
-              style={{
-                width: "100%",
-                objectFit: "cover",
-                borderRadius: "5px",
-                pointerEvents: "none",
-                maxHeight: "250px"
-              }}
-            />
+        {gifDetails.isError && (
+          <Flex w="200px" h="200px" >
+            <MediaLoadErrorUI />
+          </Flex>
+        )}
 
-            <Tooltip
-              showArrow
-              positioning={{ placement: "top" }}
-              content={
-                isFaved
-                  ? t("removeGifFromFavouriteText")
-                  : t("addGifToFavourites")
-              }
-            >
-              <IconButton
-                onPointerDown={(e) => e.stopPropagation()}
-                onPointerUp={(e) => e.stopPropagation()}
-                onPointerLeave={(e) => e.stopPropagation()}
-                onClick={handleFavouriteToggle}
-                pos="absolute"
-                top={showFavouriteButton ? "10px" : "-40px"}
-                left="10px"
-                size="xs"
-                transition="0.2s ease"
-              >
-                {isFaved ? (
-                  <FaStar style={{ width: 20, height: 20 }} />
-                ) : (
-                  <FaRegStar style={{ width: 20, height: 20 }} />
-                )}
-              </IconButton>
-            </Tooltip>
-          </Box>
+        {gifDetails.isLoading && (
+          <Flex rounded="sm" w="200px" h="200px" p="5px" className="isLoading" >
 
-          <Text color="fg.muted" fontSize="xs" py="2px" flexShrink={0}>
-            GIF
-          </Text>
-        </>
-      ) : (
-        <MediaLoadErrorUI />
-      )}
+          </Flex>
+        )}
+
+
+
+        {!gifDetails.isLoading && !gifDetails.isError &&
+          <IconButton
+            size="xs"
+            rounded="md"
+            pos="absolute"
+            top={gifDetails.showFavouriteButton ? "10px" : "-35px"} left="10px"
+            transition="0.2s ease"
+            color="bg.emphasized"
+            _hover={{
+              color: "bg",
+            }}
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleFavourite(gifData)
+            }} >
+            {!isFavourite ? <FaRegStar style={{ width: "20px", height: "20px" }} />
+              :
+              <FaStar style={{ width: "20px", height: "20px" }} />
+            }
+          </IconButton>}
+
+
+      </Flex>
+
+      <Text fontSize="xs" fontWeight="500" color="fg.muted" userSelect="none"  >GIF</Text>
     </Flex>
-  );
-};
+  )
+}
 
-export default memo(MessageGifRender);
+
+export default MessageGifRender

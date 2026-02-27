@@ -4,6 +4,6 @@ import { handleAddGifToFavourites } from "../controller/favouritesController.js"
 
 const favouritesRoute = Router();
 
-favouritesRoute.post("/gifs", ProtectRoute, handleAddGifToFavourites);
+favouritesRoute.patch("/gifs/toggle", ProtectRoute, handleAddGifToFavourites);
 
 export default favouritesRoute;
