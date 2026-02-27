@@ -348,7 +348,7 @@ export const handlePreload = async (req, res) => {
       conversations: readyToUseConversations,
       authUser: user,
       onlinePresenses: getPresenseOfPairsRes,
-      favouriteGifs: favouriteReactions?.gifs || [],
+      favouriteGifs: favouriteReactions?.gifs || {}
     };
 
     return res.status(200).json(returnObject);
