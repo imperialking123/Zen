@@ -52,7 +52,10 @@ export type SocketPresenseEvent = {
 };
 
 export type GifCategory = {
-  name: string;
+  searchterm: string;
+  path: string,
+  image: string,
+  name: string,
 };
 
 export interface GifData {
@@ -62,3 +65,4 @@ export interface GifData {
   width: string | number;
   height: string | number;
 }
+
