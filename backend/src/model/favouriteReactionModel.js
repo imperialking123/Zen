@@ -26,7 +26,10 @@ const favouriteReactionsSchema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     ref: "user",
   },
-  gifs: [gifSchema],
+  gifs: {
+    type: Map,
+    of: gifSchema,
+  },
 });
 
 const FavouriteReactions = mongoose.model(
