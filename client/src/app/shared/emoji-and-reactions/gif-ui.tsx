@@ -5,106 +5,104 @@ import { FaSearch } from "react-icons/fa";
 import debounce from "lodash.debounce";
 import { SearchGiphy } from "@/utils/chatFunctions";
 import { type GifData } from "@/types";
-import { gifCategories } from "@/lib/arrays";
 import { GrLinkPrevious } from "react-icons/gr";
 import { RiEmotionSadLine } from "react-icons/ri";
-import React from "react";
+import { memo, forwardRef } from "react";
+import UserFavouriteStore from "@/store/user-favourite-store";
 
-const GifCategoryItem = React.memo(React.forwardRef<HTMLDivElement, {
+const GifCategoryItem = memo(({
+  name,
+  value,
+  preview,
+  onCategoryClick
+}: {
   name: string;
   value: string;
   preview: string;
   onCategoryClick: ({ value, name }: { value: string; name: string }) => void;
-  isVisible: boolean;
-}>(({
-  name,
-  value,
-  preview,
-  onCategoryClick,
-  isVisible,
-}, ref) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+}) => {
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      if (isVisible && !hasLoaded) {
-        // Only play if visible and not previously loaded
-        videoRef.current.play().then(() => {
-          setHasLoaded(true);
-        }).catch(() => {
-          // Handle autoplay policy violations gracefully
-        });
-      } else if (isVisible && hasLoaded) {
-        // Resume if already loaded and visible
-        videoRef.current.play().catch(() => {});
-      } else if (!isVisible && hasLoaded) {
-        // Pause but don't unload if already loaded
-        videoRef.current.pause();
-      }
-    }
-  }, [isVisible, hasLoaded]);
+  const handleImageLoad = () => {
+    setHasLoaded(true);
+  };
 
-  // Cleanup video resources only on component unmount
-  useEffect(() => {
-    return () => {
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.src = '';
-      }
-    };
-  }, []);
+  const handleImageError = () => {
+    setHasError(true);
+  };
+
+  const handleClick = () => {
+    onCategoryClick({ value, name: name.replace("#", "") });
+  };
 
   return (
-    <Flex ref={ref} rounded="4px" overflow="hidden" pos="relative" w="full" h="105px">
-      <Flex
-        onClick={() => onCategoryClick({ value, name })}
-        userSelect="none"
-        bg="blackAlpha.500"
-        _hover={{
-          bg: "blackAlpha.700",
-        }}
-        zIndex={20}
-        transition="0.3s ease"
-        color="white"
-        h="full"
-        pos="absolute"
-        inset={0}
-        fontWeight="bold"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <Text>{name}</Text>
-      </Flex>
-      {isVisible || hasLoaded ? (
-        <video
-          ref={videoRef}
-          autoPlay={isVisible}
-          loop
-          muted
-          playsInline
+    <Flex
+      onClick={handleClick}
+      w="full"
+      h="120px"
+      rounded="md"
+      overflow="hidden"
+      position="relative"
+      cursor="pointer"
+      boxShadow="inner"
+      _hover={{
+        bg: "blackAlpha.400",
+        transform: "scale(1.02)",
+        transition: "all 0.2s ease-in-out"
+      }}
+      bg="blackAlpha.500"
+      justifyContent="center"
+      alignItems="center"
+    >
+      {!hasError ? (
+        <img
           src={preview}
-          preload="metadata"
+          alt={name}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
           style={{
             width: "100%",
             height: "100%",
             objectFit: "cover",
+            opacity: hasLoaded ? 1 : 0.7,
+            transition: "opacity 0.3s ease"
           }}
         />
       ) : (
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            backgroundColor: "var(--chakra-colors-bg-subtle)",
-          }}
-        />
+        <Flex
+          w="full"
+          h="full"
+          bg="bg.subtle"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <Text color="fg.muted" fontSize="sm" textAlign="center">
+            {name}
+          </Text>
+        </Flex>
       )}
+
+      <Flex
+        position="absolute"
+        bottom="0"
+        left="0"
+        right="0"
+        bg="blackAlpha.500"
+        h="full"
+        w="full"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <Text color="white" fontWeight="600" fontSize="sm" textAlign="center">
+          {name.replace("#", "")}
+        </Text>
+      </Flex>
     </Flex>
   );
-}));
+});
 
-const GifItem = React.memo(React.forwardRef<HTMLDivElement, {
+const GifItem = memo(forwardRef<HTMLDivElement, {
   gifData: GifData;
   onGifSelect: ({ gifData }: { gifData: GifData }) => void;
   isVisible: boolean;
@@ -120,17 +118,13 @@ const GifItem = React.memo(React.forwardRef<HTMLDivElement, {
   useEffect(() => {
     if (videoRef.current) {
       if (isVisible && !hasLoaded) {
-        // Only play if visible and not previously loaded
         videoRef.current.play().then(() => {
           setHasLoaded(true);
         }).catch(() => {
-          // Handle autoplay policy violations gracefully
         });
       } else if (isVisible && hasLoaded) {
-        // Resume if already loaded and visible
-        videoRef.current.play().catch(() => {});
+        videoRef.current.play().catch(() => { });
       } else if (!isVisible && hasLoaded) {
-        // Pause but don't unload if already loaded
         videoRef.current.pause();
       }
     }
@@ -208,12 +202,14 @@ const GifsUI = ({
 }) => {
   const { t: translate } = useTranslation(["chat"]);
 
-  const { inputPlaceHolderText, noGifFound, gifSearchError } = translate(
+  const { inputPlaceHolderText, noGifFound, gifSearchError, FavouritesText } = translate(
     "GifsUI",
+
   ) as unknown as {
     inputPlaceHolderText: string;
     gifSearchError: string;
     noGifFound: string;
+    FavouritesText: string
   };
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -221,9 +217,14 @@ const GifsUI = ({
   const [gifError, setGifError] = useState(false);
   const [isLoadingGifs, setIsLoadingGifs] = useState(false);
   const [visibleVideoIds, setVisibleVideoIds] = useState<Set<string>>(new Set());
-  
+
   const observerRef = useRef<IntersectionObserver | null>(null);
   const elementRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const favouriteGifs = UserFavouriteStore(state => state.favouriteGifs)
+  const gifCategories = UserFavouriteStore(state => state.gifCategories)
+  const getGifCategories = UserFavouriteStore.getState().getGifCategories
+  const [showFavourites, setShowFavourites] = useState(false)
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const debounceSearch = useCallback(
     debounce(async (query: string) => {
@@ -242,10 +243,16 @@ const GifsUI = ({
       } else {
         setLoadedGifs(results.gifData);
         setGifError(false);
+        // Reset scroll to top when new GIFs load
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = 0;
+        }
       }
     }, 500), // Reduced from 800ms for better responsiveness
     [],
   );
+
+
 
   // Intersection Observer setup with persistent video loading
   useEffect(() => {
@@ -300,6 +307,13 @@ const GifsUI = ({
     };
   }, [LoadedGifs, searchQuery]);
 
+
+  useEffect(() => {
+    if (gifCategories.length === 0) {
+      getGifCategories()
+    }
+  }, [gifCategories])
+
   const setElementRef = (id: string) => (element: HTMLElement | null) => {
     if (element) {
       element.setAttribute('data-video-id', id);
@@ -328,6 +342,10 @@ const GifsUI = ({
     } else {
       setLoadedGifs(results.gifData); // Could be empty array
       setGifError(false);
+      // Reset scroll to top when new GIFs load
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = 0;
+      }
     }
   }, []);
 
@@ -345,7 +363,12 @@ const GifsUI = ({
   const handleRemoveSearch = useCallback(() => {
     setSearchQuery("");
     setLoadedGifs([]);
+    // Reset scroll to top when clearing search
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
   }, []);
+
 
   return (
     <Flex
@@ -356,7 +379,7 @@ const GifsUI = ({
       direction="column"
       maxH="full"
     >
-      {showSearchBar && (
+      {showSearchBar && !showFavourites && (
         <Flex w="full" pt="2px" gap="8px" alignItems="center" px="10px">
           {searchQuery && searchQuery.length > 0 && (
             <IconButton onClick={handleRemoveSearch} size="xs" variant="plain">
@@ -373,7 +396,25 @@ const GifsUI = ({
           </InputGroup>
         </Flex>
       )}
+
+      {showFavourites && (
+        <Flex userSelect="none" w="full" pt="2px" gap="8px" alignItems="center" px="10px">
+
+          <IconButton onClick={() => {
+            setShowFavourites(false)
+            // Reset scroll to top when leaving favourites
+            if (scrollContainerRef.current) {
+              scrollContainerRef.current.scrollTop = 0;
+            }
+          }} size="xs" variant="plain">
+            <GrLinkPrevious style={{ width: "20px", height: "20px" }} />
+          </IconButton>
+
+          <Text fontSize="md" fontWeight="600" >{FavouritesText}</Text>
+        </Flex>
+      )}
       <Flex
+        ref={scrollContainerRef}
         flex={1}
         borderTop="1px solid"
         borderTopColor="bg.emphasized"
@@ -386,7 +427,7 @@ const GifsUI = ({
         bg="none"
       >
         {/*Category Mapping */}
-        {!isLoadingGifs && !searchQuery && (
+        {!isLoadingGifs && !searchQuery && !showFavourites && (
           <Flex
             flex={1}
             roundedBottom="10px"
@@ -396,23 +437,38 @@ const GifsUI = ({
             display="grid"
             bg="none"
           >
-            {gifCategories.map((gifCategory) => {
-              const { value, name } = translate(
-                `GifsUI.gifCategories.${gifCategory.value}`,
-              ) as unknown as {
-                value: string;
-                name: string;
-              };
+            {Object.keys(favouriteGifs).length > 0 && gifCategories.length > 0 &&
+              <Flex w="full" h="full"
+                onClick={() => {
+                  setShowFavourites(true)
+                  // Reset scroll to top when entering favourites
+                  if (scrollContainerRef.current) {
+                    scrollContainerRef.current.scrollTop = 0;
+                  }
+                }}
+                justifyContent="center"
+                userSelect="none"
+                boxShadow="inner"
+                rounded="md"
+                _hover={{
+                  bg: "blackAlpha.400"
+                }}
+                bg="blackAlpha.500" alignItems="center"
+              >
+                <Text color="white" fontWeight="600" >{FavouritesText}</Text>
+              </Flex>
+            }
+
+            {gifCategories.map((gifCategory, i) => {
+
 
               return (
                 <GifCategoryItem
                   onCategoryClick={handleCategoryClick}
-                  key={value}
-                  name={name}
-                  value={value}
-                  preview={gifCategory.preview}
-                  isVisible={visibleVideoIds.has(value)}
-                  ref={setElementRef(value)}
+                  key={i}
+                  name={gifCategory.name}
+                  value={gifCategory.searchterm}
+                  preview={gifCategory.image}
                 />
               );
             })}
@@ -421,7 +477,7 @@ const GifsUI = ({
 
         {!isLoadingGifs &&
           searchQuery &&
-          LoadedGifs &&
+          Array.isArray(LoadedGifs) &&
           LoadedGifs.length > 0 && (
             <div className="gifGallery">
               {LoadedGifs.map((gifItem) => {
@@ -439,7 +495,7 @@ const GifsUI = ({
           )}
 
         {!isLoadingGifs &&
-          searchQuery &&
+          searchQuery && Array.isArray(LoadedGifs) &&
           LoadedGifs.length === 0 && (
             gifError ? (
               <Flex
@@ -472,13 +528,29 @@ const GifsUI = ({
             )
           )}
 
-        {searchQuery && LoadedGifs.length === 0 && isLoadingGifs && (
+        {searchQuery && Array.isArray(LoadedGifs) && LoadedGifs.length === 0 && isLoadingGifs && (
           <div className="gifGallery">
             {Array.from({ length: 15 }).map((_, index) => (
               <div key={index} className="gif-skeleton" />
             ))}
           </div>
         )}
+
+        {showFavourites &&
+          <div className="gifGallery">
+            {Object.entries(favouriteGifs).map((gif) => {
+
+              const gifItem = gif[1]
+              return <GifItem
+                onGifSelect={onGifSelect}
+                key={gifItem.id}
+                gifData={gifItem}
+                isVisible={visibleVideoIds.has(gifItem.id)}
+                ref={setElementRef(gifItem.id)}
+              />
+            })}
+          </div>
+        }
       </Flex>
       <Flex h="5px"></Flex>
     </Flex>
