@@ -7,15 +7,17 @@ import {
   REMOVE_RECEIVED_PING,
   REMOVE_SENT_PING_WITH_SYNC,
 } from "./connectionSync";
+import type { GifData } from "@/types";
+import UserFavouriteStore from "@/store/user-favourite-store";
 
 type SYNC_ARGUMENTS = {
   type:
-    | "REMOVE_SENT_PING"
-    | "ADD_SENT_PING"
-    | "REMOVE_RECEIVED_PING"
-    | "ADD_CONNECTION"
-    | "REMOVE_CONNECTION"
-    | "DELETE_MESSAGE";
+  | "REMOVE_SENT_PING"
+  | "ADD_SENT_PING"
+  | "REMOVE_RECEIVED_PING"
+  | "ADD_CONNECTION"
+  | "REMOVE_CONNECTION"
+  | "DELETE_MESSAGE";
   documentId?: string;
   connectionPing?: connectionPingType;
   connectionData?: ConnectionType;
@@ -76,12 +78,12 @@ type ReactArgs = {
   conversationId: string;
 };
 
-type justArg = {
-  type: "fornow";
-  payload: "foo bar";
+type GifUpdateArgs = {
+  type: "gif";
+  gif: GifData
 };
 
-type handleSyncUpdateArgs = ReactArgs | justArg;
+type handleSyncUpdateArgs = ReactArgs | GifUpdateArgs;
 
 export const handleSyncUpdate = (args: handleSyncUpdateArgs) => {
   switch (args.type) {
@@ -96,7 +98,8 @@ export const handleSyncUpdate = (args: handleSyncUpdateArgs) => {
       });
       break;
 
-    case "fornow":
+    case "gif":
+      UserFavouriteStore.getState().toggleFavourite(args.gif, true)
       break;
   }
 };

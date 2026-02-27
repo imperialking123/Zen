@@ -8,21 +8,23 @@ import { create } from "zustand"
 type UserFavouriteStoreTypes = {
     gifCategories: GifCategory[]
     favouriteGifs: Record<string, GifData>;
-    toggleFavourite: (gif: GifData) => void;
+    toggleFavourite: (gif: GifData, doNotPersist?: boolean) => void;
     getGifCategories: () => void
 }
 
 const UserFavouriteStore = create<UserFavouriteStoreTypes>((set) => ({
     favouriteGifs: {},
-    toggleFavourite: (gif) => {
+    toggleFavourite: (gif, doNotPersist) => {
         set((state) => {
             const next = { ...state.favouriteGifs }
             next[gif.id] ? delete next[gif.id] : next[gif.id] = gif
             return { favouriteGifs: next }
         })
+        if (doNotPersist) return
         axiosInstance.patch("/favourites/gifs/toggle", {
             gif
         })
+
     },
 
     getGifCategories: async () => {

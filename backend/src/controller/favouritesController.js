@@ -1,9 +1,10 @@
 import FavouriteReactions from "../model/favouriteReactionModel.js";
-
+import { emitPayloadToOtherSessions } from '../lib/io.js'
 export const handleAddGifToFavourites = async (req, res) => {
   try {
 
-    const user = req.user
+    const user = req.user;
+    const session = req.session
 
     const gif = req.body?.gif
 
@@ -26,6 +27,8 @@ export const handleAddGifToFavourites = async (req, res) => {
     }
 
     const findReactions = await FavouriteReactions.findOne({ ownerId: user._id })
+    
+    emitPayloadToOtherSessions(user._id, "SYNC:UPDATE", { type: "gif", gif }, session._id)
 
     if (!findReactions) {
       await FavouriteReactions.create({
@@ -40,6 +43,8 @@ export const handleAddGifToFavourites = async (req, res) => {
       }
 
     }
+
+
 
 
     return res.status(204).end()
