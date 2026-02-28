@@ -18,10 +18,10 @@ i18next
     defaultNS: "translation",
     detection: {
       convertDetectedLanguage: (lng) => {
-        if (lng === "en") return "en-US";
+        if (lng.startsWith("en")) return "en-US";
         return lng;
       },
-    }, 
+    },
   });
 
 export default i18next;
