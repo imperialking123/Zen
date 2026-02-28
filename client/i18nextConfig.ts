@@ -9,14 +9,19 @@ i18next
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    fallbackLng: "en",
+    fallbackLng: "en-US",
     debug: false,
     returnObjects: true,
     interpolation: { escapeValue: false },
     backend: { loadPath: "/locale/{{lng}}/{{ns}}.json" },
     ns: ["translation", "auth", "connection"],
     defaultNS: "translation",
-
+    detection: {
+      convertDetectedLanguage: (lng) => {
+        if (lng === "en") return "en-US";
+        return lng;
+      },
+    }, 
   });
 
 export default i18next;
