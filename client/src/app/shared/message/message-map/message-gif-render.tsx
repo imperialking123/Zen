@@ -72,7 +72,8 @@ function MessageGifRender({ gifData, disPlayGifFullScreen, }: GifRendererProps) 
   }
 
   const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    e.stopPropagation();
     setGifDetails(d => ({ ...d, showFavouriteButton: !d.showFavouriteButton }))
   }
 
@@ -125,11 +126,10 @@ function MessageGifRender({ gifData, disPlayGifFullScreen, }: GifRendererProps) 
             onError={() => setGifDetails(e => ({ ...e, isError: true, isLoading: false }))}
             onLoadedData={() => setGifDetails(e => ({ ...e, isLoading: false }))}
             src={preview ? full : full}
-
             style={{
               width: width ? `${width}px` : "auto",
               height: height ? `${height}px` : "auto",
-
+              maxHeight: "300px",
               objectFit: "fill",
               borderRadius: "6px",
               pointerEvents: "none",
