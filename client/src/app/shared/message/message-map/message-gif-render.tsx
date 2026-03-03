@@ -1,5 +1,7 @@
 import type { GifData } from "@/types";
-import { Flex, IconButton, Text, } from "@chakra-ui/react"
+import { Text, } from "@chakra-ui/react/text"
+import { Flex } from "@chakra-ui/react/flex"
+import { IconButton } from "@chakra-ui/react/button"
 import { useEffect, useRef, useState, } from "react"
 import MediaLoadErrorUI from "../media-load-error-ui";
 import useGif from "@/hooks/use-gif";
