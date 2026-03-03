@@ -732,6 +732,8 @@ input[type="range"]::-moz-range-thumb {
   border-color: transparent;
   border-top-right-radius: 5px;
   border-bottom-right-radius: 5px;
+  width: 100%;
+  display: flex;
 }
 
 .messageItem:hover {

@@ -1,36 +1,39 @@
 import userAuthStore from "@/store/user-auth-store";
 import userChatStore from "@/store/user-chat-store";
 import type { IMessage } from "@/types/schema";
-import { Avatar, Flex, Text } from "@chakra-ui/react";
+import { Avatar } from "@chakra-ui/react/avatar";
+import { Flex } from "@chakra-ui/react/flex";
+import { Text } from "@chakra-ui/react/text";
 import { useTranslation } from "react-i18next";
 import { BsImageFill, BsRobot } from "react-icons/bs";
+import { useMemo, memo, useCallback } from "react";
 
 const P2PMessageReplyUI = ({
   replyToMessage,
 }: {
   replyToMessage?: IMessage;
 }) => {
-  const selectedConversation = userChatStore(
-    (state) => state.selectedConversation,
-  );
 
+
+  const selectedConversation = userChatStore((state) => state.selectedConversation);
   const authUser = userAuthStore((state) => state.authUser);
 
-  const otherUser =
-    replyToMessage &&
-    authUser &&
-    selectedConversation &&
-    (replyToMessage.senderId === authUser._id
+  const otherUser = replyToMessage && authUser && selectedConversation
+    ? replyToMessage.senderId === authUser._id
       ? authUser
-      : selectedConversation.otherUser);
+      : selectedConversation.otherUser
+    : null;
 
   const { t: translate } = useTranslation(["chat"]);
+
 
   const { messageDeletedText } = translate("MessageReplyUI") as unknown as {
     messageDeletedText: string;
   };
 
-  const getReplyRendition = (scrollToReplied: () => void) => {
+
+
+  const replyRendition = useMemo(() => {
     if (
       !replyToMessage ||
       typeof replyToMessage === "undefined" ||
@@ -50,10 +53,10 @@ const P2PMessageReplyUI = ({
 
     if (replyToMessage && replyToMessage.type === "default") {
       return (
-        <Flex onClick={scrollToReplied} alignItems="center" gap="5px" w="full" minW="0">
+        <Flex alignItems="center" gap="5px" w="full" minW="0">
           {replyToMessage.text && replyToMessage.text.length > 0 && (
-            <Text 
-              fontSize="sm" 
+            <Text
+              fontSize="sm"
               color="fg.muted"
               fontStyle="italic"
               overflow="hidden"
@@ -74,21 +77,24 @@ const P2PMessageReplyUI = ({
         </Flex>
       );
     }
-  };
+    return null;
+  }, [replyToMessage, messageDeletedText]);
+
 
   const hasReplyTo = !!replyToMessage;
 
-  const scrollToReplied = () => {
+  // Memoize scrollToReplied function  only recreates when replyToMessage._id changes
+  const scrollToReplied = useCallback(() => {
     if (!hasReplyTo || !replyToMessage?._id) return;
 
     const el = document.getElementById(replyToMessage._id);
-
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
       el.classList.remove("message-blink");
       el.classList.add("message-blink");
     }
-  };
+  }, [hasReplyTo, replyToMessage?._id]);
+
   return (
     <Flex userSelect="none" gap="5px" alignItems="center" pl="5px" w="full" minW="0">
       {otherUser && (
@@ -109,11 +115,13 @@ const P2PMessageReplyUI = ({
           </Text>
         </Flex>
       )}
-      <Flex flex="1" minW="0">
-        {getReplyRendition(scrollToReplied)}
+      <Flex flex="1" minW="0" onClick={scrollToReplied}>
+        {replyRendition}
       </Flex>
     </Flex>
   );
 };
 
-export { P2PMessageReplyUI };
+const MemoizedP2PMessageReplyUI = memo(P2PMessageReplyUI);
+
+export { MemoizedP2PMessageReplyUI as P2PMessageReplyUI };
