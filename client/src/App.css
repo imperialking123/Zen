@@ -734,6 +734,7 @@ input[type="range"]::-moz-range-thumb {
   border-bottom-right-radius: 5px;
   width: 100%;
   display: flex;
+  position: relative;
 }
 
 .messageItem:hover {
@@ -747,6 +748,69 @@ input[type="range"]::-moz-range-thumb {
 .messageItem:hover .simpleDate {
   opacity: 100;
 }
+
+
+.MessageFloatingMenu {
+  position: absolute;
+  right: 2%;
+  top: -17.5px;
+  border-radius: 10px;
+  padding: 3px;
+  background-color: var(--chakra-colors-bg);
+  border: 1px solid;
+  border-color: var(--chakra-colors-bg-emphasized);
+  pointer-events: none;
+  height: 35px;
+  align-items: center;
+  display: flex;
+  opacity: 0;
+}
+
+
+.messageItem:hover .MessageFloatingMenu {
+  opacity: 100;
+  pointer-events: auto;
+}
+
+.flooatingMenuEmoji {
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 28px;
+  height: 28px;
+  background-size: 19px;
+  border-radius: 5px;
+}
+
+.flooatingMenuEmoji:hover {
+  background-size: 20px;
+  background-color: var(--chakra-colors-bg-muted);
+}
+
+.MessageItemFloatingMenuButton {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.MessageItemFloatingMenuButton:hover {
+  background-color: var(--chakra-colors-bg-muted);
+  border-radius: 5px;
+}
+
+.MessageItemFloatingMenuButton svg {
+  width: 19px;
+  height: 19px;
+  color: var(--chakra-colors-fg-muted);
+}
+
+.MessageItemFloatingMenuButton:hover svg {
+  width: 20px;
+  height: 20px;
+  color: var(--chakra-colors-fg);
+}
+
 
 .selectedReplyTo {
   background-color: var(--chakra-color-blue-300);
