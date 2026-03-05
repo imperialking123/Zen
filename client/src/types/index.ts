@@ -43,6 +43,7 @@ export type MessageActionTranslations = {
   copyText: string;
   deleteMessage: string;
   moreText: string;
+  markUnreadText: string;
 };
 
 export type SocketPresenseEvent = {
@@ -53,9 +54,9 @@ export type SocketPresenseEvent = {
 
 export type GifCategory = {
   searchterm: string;
-  path: string,
-  image: string,
-  name: string,
+  path: string;
+  image: string;
+  name: string;
 };
 
 export interface GifData {
@@ -65,4 +66,3 @@ export interface GifData {
   width: string | number;
   height: string | number;
 }
-

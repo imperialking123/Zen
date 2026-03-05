@@ -37,7 +37,8 @@
     "forwardMessage": "Forward ",
     "copyText": "Copy Text",
     "deleteMessage": "Delete Message",
-    "moreText": "More"
+    "moreText": "More",
+    "markUnreadText": "Mark Unread"
   },
   "typingText": "{{name}} is typing...",
   "IunderstandText": "Got It",
