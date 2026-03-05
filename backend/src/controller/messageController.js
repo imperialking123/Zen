@@ -3,78 +3,73 @@ import Conversation from "../model/conversationModel.js";
 import imageKitInstance from "../lib/kitUploader.js";
 import { emitPayloadToOtherSessions, emitPayLoadToUser } from "../lib/io.js";
 
-
 export const handleSendMessage = async (req, res) => {
   try {
     const user = req.user;
-    const attachments = req.uploadedAttachments
+    const attachments = req.uploadedAttachments;
 
-    const { conversationId, type, text, receiverId } = req.body || {}
+    const { conversationId, type, text, receiverId } = req.body || {};
 
-
-    if (!type || typeof type !== "string") return res.status(400).json({ message: "MESSAGE_TYPE_REQUIRED" })
-
-
-
+    if (!type || typeof type !== "string")
+      return res.status(400).json({ message: "MESSAGE_TYPE_REQUIRED" });
 
     if (!conversationId || typeof conversationId !== "string")
-      return res.status(400).json({ message: "NO_TARGET_CONVO_ID_REQUIRED" })
+      return res.status(400).json({ message: "NO_TARGET_CONVO_ID_REQUIRED" });
 
-    const getConversation = await Conversation.findById(conversationId)
+    const getConversation = await Conversation.findById(conversationId);
 
-    if (!getConversation) return res.status(404).json({ message: "INVALID_CONVO_ID" })
+    if (!getConversation)
+      return res.status(404).json({ message: "INVALID_CONVO_ID" });
 
-    if (!getConversation.participants.some(p => p.equals(user._id))) {
-      return res.status(403).json({ message: "UNAUTHORIZED" })
+    if (!getConversation.participants.some((p) => p.equals(user._id))) {
+      return res.status(403).json({ message: "UNAUTHORIZED" });
     }
 
-
-
-
-    const otherUserId = getConversation.participants.find(p => !p.equals(user._id))
+    const otherUserId = getConversation.participants.find(
+      (p) => !p.equals(user._id),
+    );
 
     const messageObj = {
       senderId: user._id,
       receiverId: otherUserId || receiverId,
       conversationId: getConversation._id,
       type: type,
-    }
+    };
 
     if (type === "default") {
-      const hasText = text && typeof text === "string" && text.trim().length > 0;
-      const hasAttachments = attachments && Array.isArray(attachments) && attachments.length > 0;
+      const hasText =
+        text && typeof text === "string" && text.trim().length > 0;
+      const hasAttachments =
+        attachments && Array.isArray(attachments) && attachments.length > 0;
 
       if (!hasText && !hasAttachments) {
-        return res.status(400).json({ message: "DEFAULT_MESSAGE_REQUIRES_TEXT_OR_ATTACHMENTS" });
+        return res
+          .status(400)
+          .json({ message: "DEFAULT_MESSAGE_REQUIRES_TEXT_OR_ATTACHMENTS" });
       }
 
       if (hasAttachments) {
-        messageObj["attachments"] = attachments
+        messageObj["attachments"] = attachments;
       }
 
       if (hasText) {
-        messageObj["text"] = text
+        messageObj["text"] = text;
       }
-
     }
 
     if (type === "gif") {
-      const { id, preview, full } = req?.body?.gif || {}
+      const { id, preview, full } = req?.body?.gif || {};
 
       if (!id || !preview || !full) {
-        return res.status(400).json({ message: "Invalid gif data" })
+        return res.status(400).json({ message: "Invalid gif data" });
       }
 
-      messageObj.gif = req.body.gif
-
+      messageObj.gif = req.body.gif;
     }
 
+    const newMessage = await Message.create({ ...messageObj });
 
-    const newMessage = await Message.create({ ...messageObj })
-
-
-    return res.status(201).json(newMessage)
-
+    return res.status(201).json(newMessage);
   } catch (error) {
     console.log(
       "Error on #handleSendMessage #messageController.js Error --->",
@@ -371,14 +366,10 @@ export const handleReactToMesssage = async (req, res) => {
     if (!emoji) return res.status(400).json({ message: "EMOJI_REQUIRED" });
 
     if (typeof messageId !== "string")
-      return res
-        .status(400)
-        .json({ message: "MESSAGE_ID_INVALID_REQUIRED_STRING" });
+      return res.status(400).json({ message: "MESSAGE_ID_INVALID_REQUIRED_STRING" });
 
     if (typeof conversationId !== "string")
-      return res
-        .status(400)
-        .json({ message: "CONVERSATION_ID_INVALID_REQUIRED_STRING" });
+      return res.status(400).json({ message: "CONVERSATION_ID_INVALID_REQUIRED_STRING" });
 
     if (typeof emoji !== "string")
       return res.status(400).json({ message: "EMOJI_INVALID_REQUIRED_STRING" });
@@ -392,33 +383,39 @@ export const handleReactToMesssage = async (req, res) => {
       p.equals(user._id),
     );
 
+    if (!isUserIncluded)
+      return res.status(400).json({ message: "NOT_A_PARTICIPANT" });
+
     const otherUserId = findConversation.participants.find(
       (p) => !p.equals(user._id),
     );
 
-    if (!isUserIncluded)
-      return res.status(400).json({ message: "NOT_A_PARTICIPANT" });
-
     const findMessage = await Message.findById(messageId);
 
-    if (!findMessage) {
-      return res.status(400).json({ message: "MESSAGE_NOT_FOUND" });
-    }
+    if (!findMessage)
+      return res.status(404).json({ message: "MESSAGE_NOT_FOUND" });
 
-    const message = await Message.findById(messageId);
-    if (!message) return res.status(404).json({ message: "MESSAGE_NOT_FOUND" });
-
-    const emojiReactions = message.reactions?.get(emoji) || [];
+    // ✅ consistently use findMessage
+    const emojiReactions = findMessage.reactions?.get(emoji) || [];
     const userAlreadyReacted = emojiReactions.some(
-      (id) => id.toString() === user._id,
+      (id) => id.toString() === user._id.toString(),
     );
 
     if (userAlreadyReacted) {
-      await message.updateOne({
+      await findMessage.updateOne({
         $pull: { [`reactions.${emoji}`]: user._id },
       });
+
+      // ✅ after pulling, reload and delete the key if array is now empty
+      const updated = await Message.findById(messageId);
+      const updatedReactions = updated.reactions?.get(emoji) || [];
+      if (updatedReactions.length === 0) {
+        await updated.updateOne({
+          $unset: { [`reactions.${emoji}`]: "" },
+        });
+      }
     } else {
-      await message.updateOne({
+      await findMessage.updateOne({
         $addToSet: { [`reactions.${emoji}`]: user._id },
       });
     }
@@ -451,6 +448,6 @@ export const handleReactToMesssage = async (req, res) => {
     return res.status(204).end();
   } catch (error) {
     console.log("Error on #handleReactToMesssage Error  ---> ", error.message);
-    return res.status(400).json({ message: "SERVER_ERROR" });
+    return res.status(500).json({ message: "SERVER_ERROR" });
   }
 };
