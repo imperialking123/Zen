@@ -199,28 +199,7 @@ export const SearchGiphy = async (
   }
 };
 
-export const addGifToFavourite = async (gifData: GifData) => {
-  try {
-    userChatStore.setState((state) => {
-      return {
-        favouriteGifs: [
-          gifData,
-          ...state.favouriteGifs.filter((g) => g.id !== gifData.id),
-        ],
-      };
-    });
-  } catch (error) {}
-};
 
-export const removeGifFromFavourite = async (id: string) => {
-  try {
-    userChatStore.setState((state) => {
-      return {
-        favouriteGifs: [...state.favouriteGifs.filter((g) => g.id !== id)],
-      };
-    });
-  } catch (error) {}
-};
 
 export const getEmojiUrl = (emoji: string) => {
   const emojiHex = (): string => {
