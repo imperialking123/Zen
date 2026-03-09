@@ -8,7 +8,7 @@ export const handleSendMessage = async (req, res) => {
     const user = req.user;
     const attachments = req.uploadedAttachments;
 
-    const { conversationId, type, text, receiverId } = req.body || {};
+    const { conversationId, type, text, receiverId, replyTo } = req.body || {};
 
     if (!type || typeof type !== "string")
       return res.status(400).json({ message: "MESSAGE_TYPE_REQUIRED" });
@@ -67,9 +67,25 @@ export const handleSendMessage = async (req, res) => {
       messageObj.gif = req.body.gif;
     }
 
+    let repliedMessageVar;
+    if (replyTo && typeof replyTo === "string") {
+      const getRepliedMessage = await Message.findById(replyTo);
+      repliedMessageVar = getRepliedMessage.toObject();
+      messageObj.replyTo = replyTo;
+      messageObj.isReplied = true;
+    }
+
     const newMessage = await Message.create({ ...messageObj });
 
-    return res.status(201).json(newMessage);
+    const messageReturnObject = {
+      ...newMessage.toObject(),
+    };
+
+    if (repliedMessageVar) {
+      messageReturnObject.replyTo = repliedMessageVar;
+    }
+
+    return res.status(201).json(messageReturnObject);
   } catch (error) {
     console.log(
       "Error on #handleSendMessage #messageController.js Error --->",
@@ -115,6 +131,8 @@ export const handleGetAllMessages = async (req, res) => {
 export const handleForwardMessage = async (req, res) => {
   try {
     const { conversationIds, messageContent } = req.body || {};
+     
+    console.log(messageContent)
 
     const user = req.user;
 
@@ -163,7 +181,7 @@ export const handleForwardMessage = async (req, res) => {
     }
 
     if (type === "gif") {
-      if (!gifData || typeof gif !== "object") {
+      if (!gif || typeof gif !== "object") {
         return res
           .status(400)
           .json({ message: "GIF_MESSAGE_REQUIRES_GIF_DATA" });
@@ -206,12 +224,14 @@ export const handleForwardMessage = async (req, res) => {
     }
 
     if (attachments) {
-      baseMessageObj.attachments = attachments;
+      baseMessageObj["attachments"] = attachments;
     }
 
     if (gif) {
-      baseMessageObj.gif = gif;
+      baseMessageObj["gif"] = gif;
     }
+
+    
 
     const messageData = conversations.map((convo) => {
       const receiverId = convo.participants.find(
@@ -366,10 +386,14 @@ export const handleReactToMesssage = async (req, res) => {
     if (!emoji) return res.status(400).json({ message: "EMOJI_REQUIRED" });
 
     if (typeof messageId !== "string")
-      return res.status(400).json({ message: "MESSAGE_ID_INVALID_REQUIRED_STRING" });
+      return res
+        .status(400)
+        .json({ message: "MESSAGE_ID_INVALID_REQUIRED_STRING" });
 
     if (typeof conversationId !== "string")
-      return res.status(400).json({ message: "CONVERSATION_ID_INVALID_REQUIRED_STRING" });
+      return res
+        .status(400)
+        .json({ message: "CONVERSATION_ID_INVALID_REQUIRED_STRING" });
 
     if (typeof emoji !== "string")
       return res.status(400).json({ message: "EMOJI_INVALID_REQUIRED_STRING" });
