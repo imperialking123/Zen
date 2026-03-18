@@ -3,49 +3,38 @@ import MessageStartUI from "./message-start-ui";
 import { useTranslation } from "react-i18next";
 import {
   Fragment,
-  lazy,
   Suspense,
   useCallback,
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import userChatStore from "@/store/user-chat-store";
 import userAuthStore from "@/store/user-auth-store";
 import type { MessageActionTranslations } from "@/types";
-import type { Attachment, IMessage, IUser } from "@/types/schema";
-import { createDialog } from "@/app/dialog/create-dialog";
-import { initiateReplyTo } from "@/utils/chatFunctions";
 import useConversationMessages from "@/hooks/use-conversation-messages";
 import MessageSeparator from "./message-separator";
 import MessageItemContainer from "@/app/shared/message/message-map/message-item-container";
-
-const AttachmentFullScreenUI = lazy(
-  () =>
-    import("@/app/dialog/ui/attachment-preview/attachment-fullscreen-renderer"),
-);
-
-const ForwardMessageUI = lazy(
-  () => import("@/app/dialog/ui/message/forward-message-ui"),
-);
-
-const GifFullScreenPreviewUI = lazy(
-  () => import("@/app/dialog/ui/gif-fullscreen-preview"),
-);
-
-const DeleteMessageUI = lazy(
-  () => import("@/app/dialog/ui/message/delete-message-ui"),
-);
+import ReactToMessageEmojiPicker from "@/app/shared/message/message-map/reaction/react-to-message-emoji-picker";
+import { createDialog } from "@/app/dialog/create-dialog";
+import AttachmentFullScreenUI from "@/app/dialog/ui/attachment-preview/attachment-fullscreen-renderer";
+import GifFullScreenPreviewUI from "@/app/dialog/ui/gif-fullscreen-preview";
+import MessageItemContextMenu from "@/app/shared/message/message-context-menu";
+import type { IMessage } from "@/types/schema";
+import { initiateReplyTo } from "@/utils/chatFunctions";
+import ForwardMessageUI from "@/app/dialog/ui/message/forward-message-ui";
+import DeleteMessageUI from "@/app/dialog/ui/message/delete-message-ui";
 
 const MessagesWrapper = () => {
   const selectedConversation = userChatStore(
     (state) => state.selectedConversation,
   );
-  const displayMessages = useConversationMessages(selectedConversation?._id);
+  const displayedMessages = useConversationMessages(selectedConversation?._id);
   const authUser = userAuthStore((state) => state.authUser);
-  const addOrRemoveP2PMessageReaction =
-    userChatStore.getState().addOrRemoveP2PMessageReaction;
-
+  const addOrRemoveP2PMessageReaction = userChatStore(
+    (state) => state.addOrRemoveP2PMessageReaction,
+  );
   const { t: translate } = useTranslation(["chat"]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -54,75 +43,121 @@ const MessagesWrapper = () => {
     "messageActions",
   ) as unknown as MessageActionTranslations;
 
-  const forwardText = translate("forwardText");
+  type ShowReactToMessagePicker = {
+    isShow: boolean;
+    messageId: string;
+    domRect: DOMRect | null;
+    conversationId: string;
+  };
 
-  const getUploadingFilesText = useCallback(
-    (attachments: Attachment[]): string => {
-      if (attachments.length === 1) {
-        return attachments[0].name;
-      } else if (attachments.length > 1) {
-        translate("UploadingFiles", { number: attachments.length });
-      }
+  const [showReactToMesagePicker, setShowReactToMessagePicker] =
+    useState<ShowReactToMessagePicker>({
+      isShow: false,
+      messageId: "",
+      conversationId: "",
+      domRect: null,
+    });
 
-      return "uploading";
-    },
-    [],
-  );
+  type ShowContextMenuT = {
+    x: number;
+    y: number;
+    index: number;
+    message: IMessage;
+  };
+
+  const [showContextMenu, setShowContextMenu] =
+    useState<ShowContextMenuT | null>(null);
+
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [displayMessages]);
+  }, [displayedMessages]);
 
-  const disPlayGifFullScreen = useCallback(
-    (message: IMessage, senderProfile: IUser) => {
-      if (message.type === "gif") {
-        const id = "showGifFullScreenId";
-        createDialog.open(id, {
-          contentWidth: "100%",
-          contentRounded: "0px",
-          dialogSize: "full",
-          showCloseButton: false,
-          showBackDrop: true,
-          contentHeight: "100%",
-          bodyPadding: "0px",
+  const { currentUserProfile, otherUserProfile } = useMemo(
+    () => ({
+      currentUserProfile: authUser ?? undefined,
+      otherUserProfile: selectedConversation?.otherUser ?? undefined,
+    }),
+    [authUser, selectedConversation?.otherUser],
+  );
 
-          contentBg: "transparent",
-          content: (
-            <Suspense>
-              <GifFullScreenPreviewUI
-                createdAt={message.createdAt}
-                gifData={message.gif}
-                senderProfile={senderProfile}
-              />
-            </Suspense>
-          ),
-        });
+  type handleReactToMessageT = {
+    domRect: DOMRect;
+    messageId: string;
+    conversationId: string;
+    closeMenuFirst?: boolean;
+  };
+
+  const handleShowReactToMessagePicker = useCallback(
+    ({
+      domRect,
+      messageId,
+      conversationId,
+      closeMenuFirst,
+    }: handleReactToMessageT) => {
+      if (closeMenuFirst) {
+        setShowContextMenu(null);
       }
+
+      setShowReactToMessagePicker({
+        conversationId,
+        domRect,
+        isShow: true,
+        messageId,
+      });
     },
     [],
   );
 
-  const handleInitiateReply = useCallback((message: IMessage) => {
-    if (message.status === "sending") return;
+  const handleDisplayGifFullScreen = useCallback(
+    (index: number): void => {
+      const message = displayedMessages[index];
 
-    initiateReplyTo({
-      conversationId: message.conversationId,
-      messageId: message._id,
-    });
-  }, []);
+      if (!message) return;
+      if (message.type !== "gif") return;
+      if (!authUser || !selectedConversation) return;
 
-  const openAttFullScreen = useCallback(
-    ({
-      fileId,
-      message,
-      senderProfile,
-    }: {
-      fileId: string;
-      message: IMessage;
-      senderProfile: IUser;
-    }) => {
+      const senderProfile =
+        message.senderId === authUser._id
+          ? authUser
+          : selectedConversation.otherUser;
+
+      const id = "showGifFullScreenId";
+      createDialog.open(id, {
+        contentWidth: "100%",
+        contentRounded: "0px",
+        dialogSize: "full",
+        showCloseButton: false,
+        showBackDrop: true,
+        contentHeight: "100%",
+        bodyPadding: "0px",
+
+        contentBg: "transparent",
+        content: (
+          <Suspense>
+            <GifFullScreenPreviewUI
+              createdAt={message.createdAt}
+              gifData={message.gif}
+              senderProfile={senderProfile}
+            />
+          </Suspense>
+        ),
+      });
+    },
+    [displayedMessages, authUser, selectedConversation, createDialog],
+  );
+
+  const handleDisplayAttachmentFullScreen = useCallback(
+    (index: number, fileId: string) => {
+      const message = displayedMessages[index];
+
+      if (!message) return;
+
+      if (!authUser || !selectedConversation) return;
+
       if (
         message.type === "default" &&
         message.attachments &&
@@ -136,11 +171,16 @@ const MessagesWrapper = () => {
           (p) => p.fileId === fileId,
         );
 
+        const senderProfile =
+          message.senderId === authUser._id
+            ? authUser
+            : selectedConversation.otherUser;
+
         const arrangedArray = findAttachmentClicked
           ? [
-            findAttachmentClicked,
-            ...visualAttachments.filter((p) => p.fileId !== fileId),
-          ]
+              findAttachmentClicked,
+              ...visualAttachments.filter((p) => p.fileId !== fileId),
+            ]
           : visualAttachments;
 
         const id = "showAttachmentId";
@@ -167,10 +207,68 @@ const MessagesWrapper = () => {
         });
       }
     },
-    [],
+    [displayedMessages, authUser, selectedConversation, createDialog],
   );
 
-  const handleShowForwardUI = useCallback((message: IMessage) => {
+  const handleReactToMessage = (index: number, emoji: string) => {
+    const message = displayedMessages[index];
+
+    if (!message) return;
+
+    if (!authUser || !selectedConversation) return;
+
+    addOrRemoveP2PMessageReaction({
+      conversationId: message.conversationId,
+      emoji,
+      messageId: message._id,
+      userId: authUser._id,
+      username: authUser.username,
+    });
+  };
+
+  type ShowContextMenuDesktopT = {
+    index: number;
+    x: number;
+    y: number;
+  };
+
+  const handleShowContextMenu = (props: ShowContextMenuDesktopT) => {
+    const { index, x, y } = props;
+    const message = displayedMessages[index];
+    if (!message) return;
+
+    setShowContextMenu({
+      x,
+      y,
+      message,
+      index,
+    });
+  };
+
+  const handleInitiateReply = (index: number, closeMenuFirst?: boolean) => {
+    const message = displayedMessages[index];
+    if (!message) return;
+    if (message.status !== "sent") return;
+
+    if (closeMenuFirst) {
+      setShowContextMenu(null);
+    }
+
+    initiateReplyTo({
+      conversationId: message.conversationId,
+      messageId: message._id,
+    });
+  };
+
+  const handleShowForwardUI = (index: number, closeMenuFirst?: boolean) => {
+    const message = displayedMessages[index];
+
+    if (!message) return;
+
+    if (closeMenuFirst) {
+      setShowContextMenu(null);
+    }
+
     const forwardToId = "forwardToUI";
 
     createDialog.open(forwardToId, {
@@ -187,80 +285,57 @@ const MessagesWrapper = () => {
         </Suspense>
       ),
     });
-  }, []);
+  };
 
-  const handleShowDeleteUI = useCallback(
-    (message: IMessage) => {
-      if (!authUser || !selectedConversation) return;
+  const handleCopyText = (index: number, closeMenuFirst?: boolean) => {
+    const message = displayedMessages[index];
 
-      const senderProfile =
-        message.senderId !== authUser._id
-          ? selectedConversation.otherUser
-          : authUser;
+    if (!message) return;
 
-      if (message.status === "sending") return;
-
-      const id = "DeleteMesageUI";
-      createDialog.open(id, {
-        showCloseButton: false,
-        bodyPadding: "0px",
-        showBackDrop: true,
-        contentRounded: { base: "0px", md: "sm", lg: "sm" },
-        contentWidth: "100%",
-
-        content: (
-          <Suspense>
-            <DeleteMessageUI senderProfile={senderProfile} message={message} />
-          </Suspense>
-        ),
-      });
-    },
-    [authUser, selectedConversation],
-  );
-
-  const handleCopyText = useCallback((message: IMessage) => {
-    if (message.type !== "default") return;
-    const text = message.text;
-
-    if (text && text.length > 0) {
-      if (navigator.clipboard) {
-        try {
-          navigator.clipboard.writeText(text);
-        } catch (error) {
-          console.log(
-            "Failed To Log Text Error --->",
-            (error as Error).message,
-          );
-        }
-      }
+    if (closeMenuFirst) {
+      setShowContextMenu(null);
     }
-  }, []);
 
-  interface handleReactionAddOrRemoveProps {
-    messageId: string;
-    conversationId: string;
-    emoji: string;
-  }
+    if (
+      message.type === "default" &&
+      message.text &&
+      message.text.trim().length > 0
+    ) {
+      navigator.clipboard.writeText(message.text);
+    }
+  };
 
-  const handleReact = useCallback(
-    (props: handleReactionAddOrRemoveProps) => {
-      const { messageId, conversationId, emoji } = props;
-      if (!authUser) return;
-      addOrRemoveP2PMessageReaction({
-        messageId,
-        conversationId,
-        userId: authUser._id,
-        emoji,
-        username: authUser.username,
-      });
-    },
-    [addOrRemoveP2PMessageReaction, authUser?._id],
-  );
+  const handlePromptForDelete = (index: number, closeMenuFirst?: boolean) => {
+    const message = displayedMessages[index];
+    if (!message) return;
+    if (message.status === "sending") return;
 
-  const { currentUserProfile, otherUserProfile } = useMemo(() => ({
-    currentUserProfile: authUser ?? undefined,
-    otherUserProfile: selectedConversation?.otherUser ?? undefined,
-  }), [authUser, selectedConversation?.otherUser]);
+    if (closeMenuFirst) {
+      setShowContextMenu(null);
+    }
+
+    if (!authUser || !selectedConversation) return;
+
+    const senderProfile =
+      message.senderId !== authUser._id
+        ? selectedConversation.otherUser
+        : authUser;
+
+    const id = "DeleteMesageUI";
+    createDialog.open(id, {
+      showCloseButton: false,
+      bodyPadding: "0px",
+      showBackDrop: true,
+      contentRounded: { base: "0px", md: "sm", lg: "sm" },
+      contentWidth: "100%",
+
+      content: (
+        <Suspense>
+          <DeleteMessageUI senderProfile={senderProfile} message={message} />
+        </Suspense>
+      ),
+    });
+  };
 
   return (
     <Flex
@@ -269,6 +344,7 @@ const MessagesWrapper = () => {
       pr={{ base: "0px", lg: "8px" }}
       overflowY="auto"
       direction="column"
+      id="message-wrapper"
       // Add smooth scrolling
       css={{
         scrollBehavior: "smooth",
@@ -284,6 +360,8 @@ const MessagesWrapper = () => {
         },
       }}
       w="full"
+      pos="relative"
+      ref={wrapperRef}
     >
       <MessageStartUI
         beginningOfChatText={beginningOfChatText}
@@ -291,41 +369,69 @@ const MessagesWrapper = () => {
       />
 
       {/* Provide translated message action labels once to avoid repeated lookups. */}
-      {displayMessages.map((message, i) => {
+      {displayedMessages.map((message, i) => {
         const currentDay = new Date(message.createdAt).setHours(0, 0, 0, 0);
         const prevDay =
           i > 0
-            ? new Date(displayMessages[i - 1].createdAt).setHours(0, 0, 0, 0)
+            ? new Date(displayedMessages[i - 1].createdAt).setHours(0, 0, 0, 0)
             : null;
         const showSeparator = i === 0 || currentDay !== prevDay;
-        const prevMessage = i > 0 ? displayMessages[i - 1] : null;
+        const prevMessage = i > 0 ? displayedMessages[i - 1] : null;
 
         const showSimpleStyle = prevMessage
           ? Math.abs(
-            new Date(message.createdAt).getTime() -
-            new Date(prevMessage.createdAt).getTime(),
-          ) <
-          60 * 1000 && prevMessage.senderId === message.senderId
+              new Date(message.createdAt).getTime() -
+                new Date(prevMessage.createdAt).getTime(),
+            ) <
+              60 * 1000 && prevMessage.senderId === message.senderId
           : false;
 
         const isMine = message.senderId === authUser?._id;
         const senderProfile = isMine ? currentUserProfile : otherUserProfile;
         return (
-          <Fragment key={message._id} >
+          <Fragment key={message._id}>
             {showSeparator && (
-              <MessageSeparator
-                createdAt={message.createdAt}
-              />
+              <MessageSeparator createdAt={message.createdAt} />
             )}
             <MessageItemContainer
+              handleShowContextMenu={handleShowContextMenu}
+              handleReactToMessage={handleReactToMessage}
+              handleOpenAttachmentFullScreen={handleDisplayAttachmentFullScreen}
+              handleDisplayGifFullScreen={handleDisplayGifFullScreen}
+              index={i}
+              MessageActionTranslations={messageActions}
               senderProfile={senderProfile}
               showSimpleStyle={showSimpleStyle}
               message={message}
+              handleShowReactToMessagePicker={handleShowReactToMessagePicker}
             />
           </Fragment>
         );
       })}
 
+      {showReactToMesagePicker.isShow &&
+        showReactToMesagePicker.messageId &&
+        showReactToMesagePicker.domRect !== null && (
+          <ReactToMessageEmojiPicker
+            conversationId={showReactToMesagePicker.conversationId}
+            domRect={showReactToMesagePicker.domRect}
+            messageId={showReactToMesagePicker.messageId}
+            setShowReactToMessagePicker={setShowReactToMessagePicker}
+          />
+        )}
+
+      {showContextMenu && showContextMenu !== null && (
+        <MessageItemContextMenu
+          handlePromptForDelete={handlePromptForDelete}
+          handleCopyText={handleCopyText}
+          handleShowForwardUI={handleShowForwardUI}
+          handleInitiateReply={handleInitiateReply}
+          handleShowReactToMessagePicker={handleShowReactToMessagePicker}
+          displayedMessages={displayedMessages}
+          data={showContextMenu}
+          setContextMenu={setShowContextMenu}
+        />
+      )}
       <Flex ref={scrollRef} minH="5px" p="1px" w="full" />
     </Flex>
   );
