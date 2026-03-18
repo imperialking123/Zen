@@ -35,6 +35,8 @@ const MessagesWrapper = () => {
   const addOrRemoveP2PMessageReaction = userChatStore(
     (state) => state.addOrRemoveP2PMessageReaction,
   );
+
+  const toggleShowEditMessage = userChatStore((s) => s.toggleShowEditMessage);
   const { t: translate } = useTranslation(["chat"]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -101,7 +103,6 @@ const MessagesWrapper = () => {
       if (closeMenuFirst) {
         setShowContextMenu(null);
       }
-
       setShowReactToMessagePicker({
         conversationId,
         domRect,
@@ -178,9 +179,9 @@ const MessagesWrapper = () => {
 
         const arrangedArray = findAttachmentClicked
           ? [
-              findAttachmentClicked,
-              ...visualAttachments.filter((p) => p.fileId !== fileId),
-            ]
+            findAttachmentClicked,
+            ...visualAttachments.filter((p) => p.fileId !== fileId),
+          ]
           : visualAttachments;
 
         const id = "showAttachmentId";
@@ -337,6 +338,18 @@ const MessagesWrapper = () => {
     });
   };
 
+  const handleTriggerEditMode = (index: number, closeMenuFirst?: boolean) => {
+    const message = displayedMessages[index];
+
+    if (!message) return;
+
+    if (closeMenuFirst) {
+      setShowContextMenu(null);
+    }
+
+    toggleShowEditMessage(message._id);
+  };
+
   return (
     <Flex
       flex={1}
@@ -380,10 +393,10 @@ const MessagesWrapper = () => {
 
         const showSimpleStyle = prevMessage
           ? Math.abs(
-              new Date(message.createdAt).getTime() -
-                new Date(prevMessage.createdAt).getTime(),
-            ) <
-              60 * 1000 && prevMessage.senderId === message.senderId
+            new Date(message.createdAt).getTime() -
+            new Date(prevMessage.createdAt).getTime(),
+          ) <
+          60 * 1000 && prevMessage.senderId === message.senderId
           : false;
 
         const isMine = message.senderId === authUser?._id;
@@ -394,6 +407,9 @@ const MessagesWrapper = () => {
               <MessageSeparator createdAt={message.createdAt} />
             )}
             <MessageItemContainer
+              handleInitiateReply={handleInitiateReply}
+              handleShowForwardUI={handleShowForwardUI}
+              handleTriggerEditMode={handleTriggerEditMode}
               handleShowContextMenu={handleShowContextMenu}
               handleReactToMessage={handleReactToMessage}
               handleOpenAttachmentFullScreen={handleDisplayAttachmentFullScreen}
@@ -422,6 +438,7 @@ const MessagesWrapper = () => {
 
       {showContextMenu && showContextMenu !== null && (
         <MessageItemContextMenu
+          handleTriggerEditMode={handleTriggerEditMode}
           handlePromptForDelete={handlePromptForDelete}
           handleCopyText={handleCopyText}
           handleShowForwardUI={handleShowForwardUI}

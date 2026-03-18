@@ -13,25 +13,23 @@ const P2PMessageReplyUI = ({
 }: {
   replyToMessage?: IMessage;
 }) => {
-
-
-  const selectedConversation = userChatStore((state) => state.selectedConversation);
+  const selectedConversation = userChatStore(
+    (state) => state.selectedConversation,
+  );
   const authUser = userAuthStore((state) => state.authUser);
 
-  const otherUser = replyToMessage && authUser && selectedConversation
-    ? replyToMessage.senderId === authUser._id
-      ? authUser
-      : selectedConversation.otherUser
-    : null;
+  const otherUser =
+    replyToMessage && authUser && selectedConversation
+      ? replyToMessage.senderId === authUser._id
+        ? authUser
+        : selectedConversation.otherUser
+      : null;
 
   const { t: translate } = useTranslation(["chat"]);
-
 
   const { messageDeletedText } = translate("MessageReplyUI") as unknown as {
     messageDeletedText: string;
   };
-
-
 
   const replyRendition = useMemo(() => {
     if (
@@ -80,11 +78,11 @@ const P2PMessageReplyUI = ({
     return null;
   }, [replyToMessage, messageDeletedText]);
 
-
   const hasReplyTo = !!replyToMessage;
 
   // Memoize scrollToReplied function  only recreates when replyToMessage._id changes
   const scrollToReplied = useCallback(() => {
+    console.log({ hasReplyTo, replyToMessage });
     if (!hasReplyTo || !replyToMessage?._id) return;
 
     const el = document.getElementById(replyToMessage._id);
@@ -96,7 +94,14 @@ const P2PMessageReplyUI = ({
   }, [hasReplyTo, replyToMessage?._id]);
 
   return (
-    <Flex userSelect="none" gap="5px" alignItems="center" pl="5px" w="full" minW="0">
+    <Flex
+      userSelect="none"
+      gap="5px"
+      alignItems="center"
+      pl="5px"
+      w="full"
+      minW="0"
+    >
       {otherUser && (
         <Flex gap="5px" alignItems="center" flexShrink="0">
           <Avatar.Root boxSize="20px">

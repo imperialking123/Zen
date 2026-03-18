@@ -78,7 +78,6 @@ const MessageContainer = () => {
     navigate("..");
     userChatStore.setState({
       selectedConversation: null,
-      displayedMessages: [],
     });
   };
 
