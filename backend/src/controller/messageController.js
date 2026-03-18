@@ -419,7 +419,7 @@ export const handleReactToMesssage = async (req, res) => {
     if (!findMessage)
       return res.status(404).json({ message: "MESSAGE_NOT_FOUND" });
 
-    // ✅ consistently use findMessage
+    // consistently use findMessage
     const emojiReactions = findMessage.reactions?.get(emoji) || [];
     const userAlreadyReacted = emojiReactions.some(
       (id) => id.toString() === user._id.toString(),
@@ -430,7 +430,7 @@ export const handleReactToMesssage = async (req, res) => {
         $pull: { [`reactions.${emoji}`]: user._id },
       });
 
-      // ✅ after pulling, reload and delete the key if array is now empty
+      //  after pulling, reload and delete the key if array is now empty
       const updated = await Message.findById(messageId);
       const updatedReactions = updated.reactions?.get(emoji) || [];
       if (updatedReactions.length === 0) {
