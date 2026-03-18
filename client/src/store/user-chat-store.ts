@@ -110,7 +110,9 @@ type userChatStoreTypes = {
     tempId: string;
   }) => void;
   sendP2PGifMessage: (props: sendP2PGifMessageProps) => void;
-  conversationMessagesFetchHistory: string[]
+  conversationMessagesFetchHistory: string[];
+  editTextOnMessageId?: string;
+  toggleShowEditMessage: (messageId: string) => void
 };
 const userChatStore = create<userChatStoreTypes>((set, get) => ({
   conversations: [],
@@ -633,7 +635,12 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
       return;
     }
   },
-  conversationMessagesFetchHistory: []
+  conversationMessagesFetchHistory: [],
+  toggleShowEditMessage: (messageId) => {
+    set((state) => ({
+      editTextOnMessageId: state.editTextOnMessageId === messageId ? undefined : messageId
+    }));
+  }
 }));
 
 export default userChatStore;
