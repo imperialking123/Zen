@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   handleDeleteMessage,
+  handleEditMessage,
   handleForwardMessage,
   handleGetAllMessages,
   handleReactToMesssage,
@@ -10,6 +11,7 @@ import multer from "multer";
 import ProtectRoute from "../middleware/protectUser.js";
 
 import UploadFilesMiddleWare from '../middleware/upload-files.js'
+import verifyConvoConnected from '../middleware/verify-convo-connected.js'
 
 const messageRoute = Router();
 
@@ -71,6 +73,7 @@ messageRoute.post("/send", ProtectRoute, upload.fields([
 messageRoute.post("/forward", ProtectRoute, handleForwardMessage);
 
 messageRoute.delete("/delete", ProtectRoute, handleDeleteMessage);
-messageRoute.patch("/react", ProtectRoute, handleReactToMesssage)
+messageRoute.patch("/react", ProtectRoute, handleReactToMesssage);
+messageRoute.patch("/edit", ProtectRoute, verifyConvoConnected, handleEditMessage);
 
 export default messageRoute;

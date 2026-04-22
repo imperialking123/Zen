@@ -131,8 +131,8 @@ export const handleGetAllMessages = async (req, res) => {
 export const handleForwardMessage = async (req, res) => {
   try {
     const { conversationIds, messageContent } = req.body || {};
-     
-    console.log(messageContent)
+
+    console.log(messageContent);
 
     const user = req.user;
 
@@ -230,8 +230,6 @@ export const handleForwardMessage = async (req, res) => {
     if (gif) {
       baseMessageObj["gif"] = gif;
     }
-
-    
 
     const messageData = conversations.map((convo) => {
       const receiverId = convo.participants.find(
@@ -472,6 +470,72 @@ export const handleReactToMesssage = async (req, res) => {
     return res.status(204).end();
   } catch (error) {
     console.log("Error on #handleReactToMesssage Error  ---> ", error.message);
+    return res.status(500).json({ message: "SERVER_ERROR" });
+  }
+};
+
+export const handleEditMessage = async (req, res) => {
+  try {
+    const { messageId, conversationId, modifiedText } = req.body;
+
+    if (!messageId) {
+      return res.status(400).json({ message: "MESSAGE_ID_REQUIRED" });
+    }
+
+    if (!conversationId) {
+      return res.status(400).json({ message: "CONVERSATION_ID_REQUIRED" });
+    }
+
+    if (!modifiedText) {
+      return res.status(400).json({ message: "MODIFIED_TEXT_REQUIRED" });
+    }
+
+    if (typeof messageId !== "string") {
+      return res
+        .status(400)
+        .json({ message: "MESSAGE_ID_INVALID_REQUIRED_STRING" });
+    }
+
+    if (typeof conversationId !== "string") {
+      return res
+        .status(400)
+        .json({ message: "CONVERSATION_ID_INVALID_REQUIRED_STRING" });
+    }
+
+    if (typeof modifiedText !== "string") {
+      return res
+        .status(400)
+        .json({ message: "MODIFIED_TEXT_INVALID_REQUIRED_STRING" });
+    }
+
+    if (modifiedText.trim() === "") {
+      return res
+        .status(400)
+        .json({ message: "EMPTY_TEXT_NOT_ALLOWED_DELETE_INSTEAD" });
+    }
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ message: "MESSAGE_NOT_FOUND" });
+    }
+
+    if (!message.senderId.equals(req.user._id)) {
+      return res.status(403).json({ message: "NOT_MESSAGE_OWNER" });
+    }
+
+    const updatedMessage = await Message.findByIdAndUpdate(
+      messageId,
+      { text: modifiedText },
+      { returnDocument: "after" },
+    );
+    return res.status(200).json(updatedMessage);
+  } catch (error) {
+    console.log(
+      "Error on #handleEditMessage #messageController.js Error --->",
+      error?.message || error,
+    );
+
     return res.status(500).json({ message: "SERVER_ERROR" });
   }
 };
