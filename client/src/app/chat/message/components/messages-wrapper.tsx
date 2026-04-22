@@ -37,6 +37,7 @@ const MessagesWrapper = () => {
   );
 
   const toggleShowEditMessage = userChatStore((s) => s.toggleShowEditMessage);
+  const editMessage = userChatStore(s => s.editMessage)
   const { t: translate } = useTranslation(["chat"]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -338,8 +339,11 @@ const MessagesWrapper = () => {
     });
   };
 
+
+
   const handleTriggerEditMode = (index: number, closeMenuFirst?: boolean) => {
     const message = displayedMessages[index];
+    console.log(message)
 
     if (!message) return;
 
@@ -348,6 +352,24 @@ const MessagesWrapper = () => {
     }
 
     toggleShowEditMessage(message._id);
+  };
+
+
+  const handleEditMesssage = (msgIndex: number, text: string) => {
+    const message = displayedMessages[msgIndex];
+
+    if (!message) return;
+
+    toggleShowEditMessage(message._id)
+
+    if (message.type === "default") {
+      if (text.trim().length === 0) {
+        handlePromptForDelete(msgIndex, true);
+        return;
+      }
+
+      editMessage(message.conversationId, text, message._id);
+    }
   };
 
   return (
@@ -406,7 +428,7 @@ const MessagesWrapper = () => {
             {showSeparator && (
               <MessageSeparator createdAt={message.createdAt} />
             )}
-            <MessageItemContainer
+            <MessageItemContainer handleEditMesssage={handleEditMesssage}
               handleInitiateReply={handleInitiateReply}
               handleShowForwardUI={handleShowForwardUI}
               handleTriggerEditMode={handleTriggerEditMode}

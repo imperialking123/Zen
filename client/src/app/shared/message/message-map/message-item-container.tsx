@@ -44,6 +44,7 @@ type MessageItemContainerProps = {
   handleTriggerEditMode: (index: number, closeMenuFirst?: boolean) => void;
   handleInitiateReply: (index: number) => void;
   handleShowForwardUI: (index: number) => void;
+  handleEditMesssage: (msgIndex: number, text: string) => void
 };
 
 type MessageFloatingMenuProps = {
@@ -339,6 +340,8 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
         <Flex onContextMenu={handleContextMenu} w="full" direction="column">
           {message.type === "default" && message.text && (
             <MessageTextRenderer
+              handleEditMesssage={props.handleEditMesssage}
+              handleTriggerEditMode={handleTriggerEditMode}
               index={index}
               messageId={message._id}
               text={message.text}
