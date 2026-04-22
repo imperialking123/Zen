@@ -112,7 +112,8 @@ type userChatStoreTypes = {
   sendP2PGifMessage: (props: sendP2PGifMessageProps) => void;
   conversationMessagesFetchHistory: string[];
   editTextOnMessageId?: string;
-  toggleShowEditMessage: (messageId: string) => void
+  toggleShowEditMessage: (messageId: string) => void;
+  editMessage: (conversationId: string, modifiedText: string, messageId: string) => void;
 };
 const userChatStore = create<userChatStoreTypes>((set, get) => ({
   conversations: [],
@@ -640,6 +641,68 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     set((state) => ({
       editTextOnMessageId: state.editTextOnMessageId === messageId ? undefined : messageId
     }));
+  },
+  editMessage: async (conversationId, modifiedText, messageId) => {
+    const messages = get().storedMessages[conversationId] || [];
+    const message = messages.find((msg) => msg._id === messageId);
+    
+    if (!message || message.type !== "default" || !message.text) {
+      return;
+    }
+    
+    const originalText = message.text;
+    
+    if (originalText.trim() === modifiedText.trim()) {
+      return;
+    }
+    
+    try {
+      set((state) => {
+        const updatedMessages = state.storedMessages[conversationId].map((msg) =>
+          msg._id === messageId ? { ...msg, text: modifiedText, status: "editing" as const } : msg
+        );
+        
+        return {
+          storedMessages: {
+            ...state.storedMessages,
+            [conversationId]: updatedMessages
+          }
+        };
+      });
+
+      const response = await axiosInstance.patch("/messages/edit", {
+        messageId,
+        conversationId,
+        modifiedText
+      });
+
+      set((state) => {
+        const confirmedMessages = state.storedMessages[conversationId].map((msg) =>
+          msg._id === messageId ? { ...msg, ...response.data, status: "sent" as const } : msg
+        );
+        
+        return {
+          storedMessages: {
+            ...state.storedMessages,
+            [conversationId]: confirmedMessages
+          }
+        };
+      });
+
+    } catch (error) {
+      set((state) => {
+        const revertedMessages = state.storedMessages[conversationId].map((msg) =>
+          msg._id === messageId ? { ...msg, text: originalText, status: "sent" as const } : msg
+        );
+        
+        return {
+          storedMessages: {
+            ...state.storedMessages,
+            [conversationId]: revertedMessages
+          }
+        };
+      });
+    }
   }
 }));
 
