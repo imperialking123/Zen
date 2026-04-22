@@ -202,8 +202,6 @@ export const SearchGiphy = async (
   }
 };
 
-
-
 export const getEmojiUrl = (emoji: string) => {
   const emojiHex = (): string => {
     return Array.from(emoji)
