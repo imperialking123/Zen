@@ -11,7 +11,11 @@ const GifVideoPlayer = ({ gifData }: { gifData: GifData }) => {
   const [isError, setIsError] = useState(false);
 
   if (isError) {
-    return <MediaLoadErrorUI />;
+    return (
+      <Flex w="300px" h="300px">
+        <MediaLoadErrorUI />
+      </Flex>
+    );
   }
 
   return (
@@ -48,7 +52,6 @@ const GifFullScreenPreviewUI = ({
     const id = "showGifFullScreenId";
     createDialog.close(id);
   };
-
 
   return (
     <Flex
@@ -121,7 +124,9 @@ const GifFullScreenPreviewUI = ({
         w="full"
         h="full"
       >
-        <GifVideoPlayer gifData={gifData} />
+        <div onClick={(e) => e.stopPropagation()}>
+          <GifVideoPlayer gifData={gifData} />
+        </div>
       </Flex>
     </Flex>
   );

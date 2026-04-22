@@ -329,7 +329,8 @@
 
   .gallery.count-7 > *:nth-child(1) {
     grid-column: span 6;
-    height: 180px; /* Add this - adjust the value as needed */
+    height: 180px;
+    /* Add this - adjust the value as needed */
   }
 
   .gallery.count-7 > *:nth-child(2),
@@ -673,6 +674,7 @@ input[type="range"]::-moz-range-thumb {
   0% {
     background-position: 100% 0;
   }
+
   100% {
     background-position: -100% 0;
   }
@@ -683,6 +685,7 @@ input[type="range"]::-moz-range-thumb {
   grid-template-columns: repeat(10, 1fr);
   gap: 10px;
 }
+
 .gifGallery {
   column-count: 2;
   column-gap: 5px;
@@ -720,9 +723,11 @@ input[type="range"]::-moz-range-thumb {
 .gif-skeleton:nth-child(3n + 1) {
   height: 150px;
 }
+
 .gif-skeleton:nth-child(3n + 2) {
   height: 200px;
 }
+
 .gif-skeleton:nth-child(3n + 3) {
   height: 180px;
 }
@@ -732,10 +737,81 @@ input[type="range"]::-moz-range-thumb {
   border-color: transparent;
   border-top-right-radius: 5px;
   border-bottom-right-radius: 5px;
+  width: 100%;
+  display: flex;
+  position: relative;
 }
 
 .messageItem:hover {
   background: var(--chakra-colors-bg-muted);
+}
+
+.messageItem .simpleDate {
+  opacity: 0;
+}
+
+.messageItem:hover .simpleDate {
+  opacity: 100;
+}
+
+.MessageFloatingMenu {
+  position: absolute;
+  right: 2%;
+  top: -17.5px;
+  border-radius: 10px;
+  padding: 3px;
+  background-color: var(--chakra-colors-bg);
+  border: 1px solid;
+  border-color: var(--chakra-colors-bg-emphasized);
+  pointer-events: none;
+  height: 35px;
+  align-items: center;
+  display: flex;
+  opacity: 0;
+}
+
+.messageItem:hover .MessageFloatingMenu {
+  opacity: 100;
+  pointer-events: auto;
+}
+
+.flooatingMenuEmoji {
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 28px;
+  height: 28px;
+  background-size: 19px;
+  border-radius: 5px;
+}
+
+.flooatingMenuEmoji:hover {
+  background-size: 20px;
+  background-color: var(--chakra-colors-bg-muted);
+}
+
+.MessageItemFloatingMenuButton {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.MessageItemFloatingMenuButton:hover {
+  background-color: var(--chakra-colors-bg-muted);
+  border-radius: 5px;
+}
+
+.MessageItemFloatingMenuButton svg {
+  width: 19px;
+  height: 19px;
+  color: var(--chakra-colors-fg-muted);
+}
+
+.MessageItemFloatingMenuButton:hover svg {
+  width: 20px;
+  height: 20px;
+  color: var(--chakra-colors-fg);
 }
 
 .selectedReplyTo {
@@ -753,6 +829,7 @@ input[type="range"]::-moz-range-thumb {
   75% {
     background-color: var(--selectedReplyToBgThick) !important;
   }
+
   100% {
     background-color: var(--selectedReplyToBg);
   }
@@ -801,7 +878,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .emojiItem {
-  border: none; /* Remove border */
+  border: none;
+  /* Remove border */
 }
 
 .emojiItem:hover {
@@ -817,12 +895,25 @@ input[type="range"]::-moz-range-thumb {
   outline: none;
 }
 
-
-
-.reactionEmojiItem{
+.reactionEmojiItem {
   width: 25px;
   height: 25px;
   background-size: 20px;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+.MessageItemContextMenuEmoji {
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 38px;
+  height: 38px;
+  background-color: var(--chakra-colors-bg-muted);
+  background-size: 22px;
+  border-radius: 8px;
+  transition: 0.5s ease;
+}
+
+.MessageItemContextMenuEmoji:hover {
+  background-color: var(--chakra-colors-bg-emphasized);
 }

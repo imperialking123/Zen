@@ -9,7 +9,7 @@ import {
   Text,
   type MenuSelectionDetails,
 } from "@chakra-ui/react";
-import { useId, useRef, useState, } from "react";
+import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaX } from "react-icons/fa6";
 import { HiDownload } from "react-icons/hi";
@@ -45,8 +45,8 @@ type AttachmentFullScreenPreviewTranslations = {
   copyImageText: string;
   somethingWentWrongText: string;
   imageCopiedText: string;
-  copiedText: string
-}
+  copiedText: string;
+};
 
 function Button({
   children,
@@ -105,7 +105,6 @@ function AttachmentMenu({
   lang,
   currentAttachment,
   copiedText,
-
 }: {
   triggerId: string;
   more: string;
@@ -122,20 +121,20 @@ function AttachmentMenu({
   attachmentSize: number;
   currentAttachment: Extract<Attachment, { type: "image" | "video" }>;
   copiedText: string;
-
 }) {
-
   const handleOnMenuSelect = (e: MenuSelectionDetails) => {
     const text = e.value[0];
 
     switch (text) {
       case "copyLink":
         if (currentAttachment.filePath) {
-          navigator.clipboard.writeText(generateCDN_URL(
-            currentAttachment.filePath,
-            currentAttachment.mimeType || '',
-            true,
-          ));
+          navigator.clipboard.writeText(
+            generateCDN_URL(
+              currentAttachment.filePath,
+              currentAttachment.mimeType || "",
+              true,
+            ),
+          );
         }
         break;
       case "filename":
@@ -150,7 +149,7 @@ function AttachmentMenu({
     }
 
     toast.success(copiedText);
-  }
+  };
 
   return (
     <Menu.Root
@@ -322,13 +321,16 @@ const AttachmentFullScreenUI = ({
     copyLink,
     copyAttachmentId,
     id,
-    viewDetails, copiedText,
+    viewDetails,
+    copiedText,
     openFullScreen,
     somethingWentWrongText,
     downloadText,
     copyImageText,
-    imageCopiedText
-  } = translate("selectedVisualAttachmentsText") as unknown as AttachmentFullScreenPreviewTranslations
+    imageCopiedText,
+  } = translate(
+    "selectedVisualAttachmentsText",
+  ) as unknown as AttachmentFullScreenPreviewTranslations;
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -356,10 +358,6 @@ const AttachmentFullScreenUI = ({
   });
 
   const handleDownload = () => {
-
-
-    console.log("Alert  Download Hit")
-
     if (!currentAttachment) return;
 
     if (!currentAttachment.filePath) return;
@@ -378,6 +376,7 @@ const AttachmentFullScreenUI = ({
 
     document.body.removeChild(link);
   };
+
   const handleOpenInBrowser = () => {
     if (!currentAttachment) return;
 
@@ -397,7 +396,6 @@ const AttachmentFullScreenUI = ({
     document.body.removeChild(link);
   };
 
-
   const handleCopyImage = async () => {
     const url = getSource(
       currentAttachment.filePath,
@@ -405,30 +403,60 @@ const AttachmentFullScreenUI = ({
       currentAttachment.mimeType,
     );
 
-    if (!url) return
+    if (!url) return;
+
     try {
       const response = await fetch(url);
-      const blob = await response.blob()
+      const blob = await response.blob();
 
+      // 1. Check if it's already a PNG. If not, convert it.
+      let pngBlob = blob;
+      if (blob.type !== "image/png") {
+        pngBlob = await convertToPng(blob);
+      }
+
+      // 2. Write the PNG blob to the clipboard
       await navigator.clipboard.write([
-        new ClipboardItem({ [blob.type]: blob })
+        new ClipboardItem({ "image/png": pngBlob }),
       ]);
 
-      toast.success(imageCopiedText)
-
+      toast.success(imageCopiedText);
     } catch (error) {
-      toast.error(somethingWentWrongText)
+      toast.error(somethingWentWrongText);
+      console.error(
+        "Error while trying to copy image:",
+        (error as Error).message,
+      );
     }
+  };
 
-  }
-
+  
+  const convertToPng = (blob: Blob): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0);
+        canvas.toBlob((result) => {
+          if (result) resolve(result);
+          else reject(new Error("Canvas conversion failed"));
+        }, "image/png");
+      };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(blob);
+    });
+  };
 
   const clickHandler = (
     caseText: "forward" | "openInBrowser" | "saveVideo" | "copyImage",
   ) => {
     switch (caseText) {
-
-      case "copyImage": handleCopyImage(); break
+      case "copyImage":
+        handleCopyImage();
+        break;
       case "openInBrowser":
         handleOpenInBrowser();
         break;
@@ -436,8 +464,6 @@ const AttachmentFullScreenUI = ({
         handleDownload();
     }
   };
-
-
 
   const handleExit = () => {
     const id = "showAttachmentId";
@@ -490,11 +516,15 @@ const AttachmentFullScreenUI = ({
             rounded="xl"
             bg="gray.800"
           >
-
-            {currentAttachment.type === "image" &&
-              <Button caseText="copyImage" clickHander={clickHandler} content={copyImageText} >
+            {currentAttachment.type === "image" && (
+              <Button
+                caseText="copyImage"
+                clickHander={clickHandler}
+                content={copyImageText}
+              >
                 <IoCopyOutline size={17} fontWeight={12} />
-              </Button>}
+              </Button>
+            )}
 
             <Button
               clickHander={clickHandler}
@@ -503,8 +533,6 @@ const AttachmentFullScreenUI = ({
             >
               <HiDownload style={{ width: "20px", height: "20px" }} />
             </Button>
-
-
 
             <Button
               clickHander={clickHandler}

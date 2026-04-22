@@ -103,7 +103,6 @@ export const HANDLE_RECEIVE_NEW_MESSAGE = async (message: IMessage) => {
               ...state.storedMessages,
               [convoId]: updatedMessages,
             },
-            displayedMessages: updatedMessages,
             selectedConversation: updatedFindConvo,
           };
         });

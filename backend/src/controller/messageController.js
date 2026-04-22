@@ -3,78 +3,89 @@ import Conversation from "../model/conversationModel.js";
 import imageKitInstance from "../lib/kitUploader.js";
 import { emitPayloadToOtherSessions, emitPayLoadToUser } from "../lib/io.js";
 
-
 export const handleSendMessage = async (req, res) => {
   try {
     const user = req.user;
-    const attachments = req.uploadedAttachments
+    const attachments = req.uploadedAttachments;
 
-    const { conversationId, type, text, receiverId } = req.body || {}
+    const { conversationId, type, text, receiverId, replyTo } = req.body || {};
 
-
-    if (!type || typeof type !== "string") return res.status(400).json({ message: "MESSAGE_TYPE_REQUIRED" })
-
-
-
+    if (!type || typeof type !== "string")
+      return res.status(400).json({ message: "MESSAGE_TYPE_REQUIRED" });
 
     if (!conversationId || typeof conversationId !== "string")
-      return res.status(400).json({ message: "NO_TARGET_CONVO_ID_REQUIRED" })
+      return res.status(400).json({ message: "NO_TARGET_CONVO_ID_REQUIRED" });
 
-    const getConversation = await Conversation.findById(conversationId)
+    const getConversation = await Conversation.findById(conversationId);
 
-    if (!getConversation) return res.status(404).json({ message: "INVALID_CONVO_ID" })
+    if (!getConversation)
+      return res.status(404).json({ message: "INVALID_CONVO_ID" });
 
-    if (!getConversation.participants.some(p => p.equals(user._id))) {
-      return res.status(403).json({ message: "UNAUTHORIZED" })
+    if (!getConversation.participants.some((p) => p.equals(user._id))) {
+      return res.status(403).json({ message: "UNAUTHORIZED" });
     }
 
-
-
-
-    const otherUserId = getConversation.participants.find(p => !p.equals(user._id))
+    const otherUserId = getConversation.participants.find(
+      (p) => !p.equals(user._id),
+    );
 
     const messageObj = {
       senderId: user._id,
       receiverId: otherUserId || receiverId,
       conversationId: getConversation._id,
       type: type,
-    }
+    };
 
     if (type === "default") {
-      const hasText = text && typeof text === "string" && text.trim().length > 0;
-      const hasAttachments = attachments && Array.isArray(attachments) && attachments.length > 0;
+      const hasText =
+        text && typeof text === "string" && text.trim().length > 0;
+      const hasAttachments =
+        attachments && Array.isArray(attachments) && attachments.length > 0;
 
       if (!hasText && !hasAttachments) {
-        return res.status(400).json({ message: "DEFAULT_MESSAGE_REQUIRES_TEXT_OR_ATTACHMENTS" });
+        return res
+          .status(400)
+          .json({ message: "DEFAULT_MESSAGE_REQUIRES_TEXT_OR_ATTACHMENTS" });
       }
 
       if (hasAttachments) {
-        messageObj["attachments"] = attachments
+        messageObj["attachments"] = attachments;
       }
 
       if (hasText) {
-        messageObj["text"] = text
+        messageObj["text"] = text;
       }
-
     }
 
     if (type === "gif") {
-      const { id, preview, full } = req?.body?.gif || {}
+      const { id, preview, full } = req?.body?.gif || {};
 
       if (!id || !preview || !full) {
-        return res.status(400).json({ message: "Invalid gif data" })
+        return res.status(400).json({ message: "Invalid gif data" });
       }
 
-      messageObj.gif = req.body.gif
-
+      messageObj.gif = req.body.gif;
     }
 
+    let repliedMessageVar;
+    if (replyTo && typeof replyTo === "string") {
+      const getRepliedMessage = await Message.findById(replyTo);
+      repliedMessageVar = getRepliedMessage.toObject();
+      messageObj.replyTo = replyTo;
+      messageObj.isReplied = true;
+    }
 
-    const newMessage = await Message.create({ ...messageObj })
+    const newMessage = await Message.create({ ...messageObj });
 
+    const messageReturnObject = {
+      ...newMessage.toObject(),
+    };
 
-    return res.status(201).json(newMessage)
+    if (repliedMessageVar) {
+      messageReturnObject.replyTo = repliedMessageVar;
+    }
 
+    return res.status(201).json(messageReturnObject);
   } catch (error) {
     console.log(
       "Error on #handleSendMessage #messageController.js Error --->",
@@ -120,6 +131,8 @@ export const handleGetAllMessages = async (req, res) => {
 export const handleForwardMessage = async (req, res) => {
   try {
     const { conversationIds, messageContent } = req.body || {};
+
+    console.log(messageContent);
 
     const user = req.user;
 
@@ -168,7 +181,7 @@ export const handleForwardMessage = async (req, res) => {
     }
 
     if (type === "gif") {
-      if (!gifData || typeof gif !== "object") {
+      if (!gif || typeof gif !== "object") {
         return res
           .status(400)
           .json({ message: "GIF_MESSAGE_REQUIRES_GIF_DATA" });
@@ -211,11 +224,11 @@ export const handleForwardMessage = async (req, res) => {
     }
 
     if (attachments) {
-      baseMessageObj.attachments = attachments;
+      baseMessageObj["attachments"] = attachments;
     }
 
     if (gif) {
-      baseMessageObj.gif = gif;
+      baseMessageObj["gif"] = gif;
     }
 
     const messageData = conversations.map((convo) => {
@@ -392,33 +405,39 @@ export const handleReactToMesssage = async (req, res) => {
       p.equals(user._id),
     );
 
+    if (!isUserIncluded)
+      return res.status(400).json({ message: "NOT_A_PARTICIPANT" });
+
     const otherUserId = findConversation.participants.find(
       (p) => !p.equals(user._id),
     );
 
-    if (!isUserIncluded)
-      return res.status(400).json({ message: "NOT_A_PARTICIPANT" });
-
     const findMessage = await Message.findById(messageId);
 
-    if (!findMessage) {
-      return res.status(400).json({ message: "MESSAGE_NOT_FOUND" });
-    }
+    if (!findMessage)
+      return res.status(404).json({ message: "MESSAGE_NOT_FOUND" });
 
-    const message = await Message.findById(messageId);
-    if (!message) return res.status(404).json({ message: "MESSAGE_NOT_FOUND" });
-
-    const emojiReactions = message.reactions?.get(emoji) || [];
+    // consistently use findMessage
+    const emojiReactions = findMessage.reactions?.get(emoji) || [];
     const userAlreadyReacted = emojiReactions.some(
-      (id) => id.toString() === user._id,
+      (id) => id.toString() === user._id.toString(),
     );
 
     if (userAlreadyReacted) {
-      await message.updateOne({
+      await findMessage.updateOne({
         $pull: { [`reactions.${emoji}`]: user._id },
       });
+
+      //  after pulling, reload and delete the key if array is now empty
+      const updated = await Message.findById(messageId);
+      const updatedReactions = updated.reactions?.get(emoji) || [];
+      if (updatedReactions.length === 0) {
+        await updated.updateOne({
+          $unset: { [`reactions.${emoji}`]: "" },
+        });
+      }
     } else {
-      await message.updateOne({
+      await findMessage.updateOne({
         $addToSet: { [`reactions.${emoji}`]: user._id },
       });
     }
@@ -451,6 +470,72 @@ export const handleReactToMesssage = async (req, res) => {
     return res.status(204).end();
   } catch (error) {
     console.log("Error on #handleReactToMesssage Error  ---> ", error.message);
-    return res.status(400).json({ message: "SERVER_ERROR" });
+    return res.status(500).json({ message: "SERVER_ERROR" });
+  }
+};
+
+export const handleEditMessage = async (req, res) => {
+  try {
+    const { messageId, conversationId, modifiedText } = req.body;
+
+    if (!messageId) {
+      return res.status(400).json({ message: "MESSAGE_ID_REQUIRED" });
+    }
+
+    if (!conversationId) {
+      return res.status(400).json({ message: "CONVERSATION_ID_REQUIRED" });
+    }
+
+    if (!modifiedText) {
+      return res.status(400).json({ message: "MODIFIED_TEXT_REQUIRED" });
+    }
+
+    if (typeof messageId !== "string") {
+      return res
+        .status(400)
+        .json({ message: "MESSAGE_ID_INVALID_REQUIRED_STRING" });
+    }
+
+    if (typeof conversationId !== "string") {
+      return res
+        .status(400)
+        .json({ message: "CONVERSATION_ID_INVALID_REQUIRED_STRING" });
+    }
+
+    if (typeof modifiedText !== "string") {
+      return res
+        .status(400)
+        .json({ message: "MODIFIED_TEXT_INVALID_REQUIRED_STRING" });
+    }
+
+    if (modifiedText.trim() === "") {
+      return res
+        .status(400)
+        .json({ message: "EMPTY_TEXT_NOT_ALLOWED_DELETE_INSTEAD" });
+    }
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ message: "MESSAGE_NOT_FOUND" });
+    }
+
+    if (!message.senderId.equals(req.user._id)) {
+      return res.status(403).json({ message: "NOT_MESSAGE_OWNER" });
+    }
+
+    const updatedMessage = await Message.findByIdAndUpdate(
+      messageId,
+      { text: modifiedText },
+      { returnDocument: "after" },
+    );
+    return res.status(200).json(updatedMessage);
+  } catch (error) {
+    console.log(
+      "Error on #handleEditMessage #messageController.js Error --->",
+      error?.message || error,
+    );
+
+    return res.status(500).json({ message: "SERVER_ERROR" });
   }
 };

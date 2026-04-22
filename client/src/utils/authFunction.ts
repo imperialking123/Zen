@@ -21,6 +21,7 @@ import type {
   IUser,
 } from "../types/schema";
 import userChatStore from "../store/user-chat-store";
+import UserFavouriteStore from "@/store/user-favourite-store";
 
 const translate = i8nextConfig.getFixedT(null, "auth");
 
@@ -30,28 +31,29 @@ type preloadType = {
   receivedConnectionPings: connectionPingType[];
   conversations: IConversation[];
   onlinePresenses: OnlinePresenses;
-  favouriteGifs: GifData[];
+  favouriteGifs: Record<string, GifData>;
 };
 
 export const handlePreload = async () => {
   try {
-    const res = await axiosInstance.get("/auth/preload");
-
-    const resData: preloadType = res.data;
+    const res = await axiosInstance.get<preloadType>("/auth/preload");
 
     userConnectionStore.setState({
-      connections: resData.connections,
-      sentConnectionPings: resData.sentConnectionPings,
-      receivedConnectionPings: resData.receivedConnectionPings,
+      connections: res.data.connections,
+      sentConnectionPings: res.data.sentConnectionPings,
+      receivedConnectionPings: res.data.receivedConnectionPings,
     });
 
     userPresenseStore.setState({
-      onlinePresenses: resData?.onlinePresenses || {},
+      onlinePresenses: res.data?.onlinePresenses || {},
     });
 
     userChatStore.setState({
-      conversations: resData.conversations,
-      favouriteGifs: resData.favouriteGifs,
+      conversations: res.data.conversations,
+    });
+
+    UserFavouriteStore.setState({
+      favouriteGifs: res.data.favouriteGifs,
     });
   } catch {
     console.log("Preload Failed");

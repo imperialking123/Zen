@@ -250,6 +250,9 @@ const ForwardMessageUI = ({ message }: { message: IMessage }) => {
     (p) => p._id === message.conversationId,
   );
 
+  const messageFetchHistory = userChatStore(
+    (state) => state.conversationMessagesFetchHistory,
+  );
   const navigate = useNavigate();
 
   const [selectedConnectionIds, setSelectedConnectionIds] = useState<string[]>(
@@ -357,10 +360,14 @@ const ForwardMessageUI = ({ message }: { message: IMessage }) => {
         ...(message.type === "gif" && "gif" in message && { gif: message.gif }),
       } as IMessage;
 
-      addPendingMessage({ message: newMessage, conversationId: convo._id });
+      if (messageFetchHistory.includes(convo._id)) {
+        addPendingMessage({ message: newMessage, conversationId: convo._id });
+      }
     });
 
-    void forwardMessage({
+    if (isSending) return;
+
+    forwardMessage({
       conversationIds: allConversationIds,
       messageContent: message,
     });

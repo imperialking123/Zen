@@ -42,7 +42,7 @@ export interface BaseMessage {
   conversationId: string;
   senderId: string;
   receiverId: string;
-  status: "sending" | "sent" | "delivered" | "read" | "failed";
+  status: "sending" | "sent" | "delivered" | "read" | "failed" | "editing";
   isReplied?: boolean;
   isForwarded?: boolean;
   createdAt: string;

@@ -37,7 +37,8 @@
     "forwardMessage": "Forward ",
     "copyText": "Copy Text",
     "deleteMessage": "Delete Message",
-    "moreText": "More"
+    "moreText": "More",
+    "markUnreadText": "Mark Unread"
   },
   "typingText": "{{name}} is typing...",
   "IunderstandText": "Got It",
@@ -87,104 +88,7 @@
     "inputPlaceHolderText": "Search Giphy",
     "gifSearchError": "Couldn't fetch GIFs. Give it another shot?",
     "noGifFound": "Couldn't find your perfect GIF. Search something else!",
-    "gifCategories": {
-      "anime": {
-        "value": "anime",
-        "name": "anime"
-      },
-      "jjk": {
-        "value": "jjk",
-        "name": "jjk"
-      },
-      "plusultra": {
-        "value": "plusultra",
-        "name": "plus ultra"
-      },
-      "happy": {
-        "value": "happy",
-        "name": "happy"
-      },
-      "whatever": {
-        "value": "whatever",
-        "name": "whatever"
-      },
-      "hungry": {
-        "value": "hungry",
-        "name": "hungry"
-      },
-      "dance": {
-        "value": "dance",
-        "name": "dance"
-      },
-      "omg": {
-        "value": "omg",
-        "name": "omg"
-      },
-      "crazy": {
-        "value": "crazy",
-        "name": "crazy"
-      },
-      "shrug": {
-        "value": "shrug",
-        "name": "shrug"
-      },
-      "smile": {
-        "value": "smile",
-        "name": "smile"
-      },
-      "awkward": {
-        "value": "awkward",
-        "name": "awkward"
-      },
-      "angry": {
-        "value": "angry",
-        "name": "angry"
-      },
-      "wink": {
-        "value": "wink",
-        "name": "wink"
-      },
-      "miss you": {
-        "value": "miss you",
-        "name": "miss you"
-      },
-      "thank you": {
-        "value": "thank you",
-        "name": "thank you"
-      },
-      "ok": {
-        "value": "ok",
-        "name": "ok"
-      },
-      "hugs": {
-        "value": "hugs",
-        "name": "hugs"
-      },
-      "hello": {
-        "value": "hello",
-        "name": "hello"
-      },
-      "sleepy": {
-        "value": "sleepy",
-        "name": "sleepy"
-      },
-      "love": {
-        "value": "love",
-        "name": "love"
-      },
-      "chill out": {
-        "value": "chill out",
-        "name": "chill out"
-      },
-      "nervous": {
-        "value": "nervous",
-        "name": "nervous"
-      },
-      "highfive": {
-        "value": "highfive",
-        "name": "high five"
-      }
-    }
+    "FavouritesText": "Favourites"
   },
 
   "copyLink": "Copy Link",

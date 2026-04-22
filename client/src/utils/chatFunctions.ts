@@ -1,4 +1,4 @@
-import {  isAxiosError } from "axios";
+import { isAxiosError } from "axios";
 import i18next from "../../i18nextConfig";
 
 import type {
@@ -88,7 +88,7 @@ export const getMessages = async (conversationId: string) => {
       userChatStore.getState().storedMessages[conversationId];
 
     if (getMessagesFromStore) {
-      userChatStore.setState({ displayedMessages: getMessagesFromStore });
+
       return;
     }
     const res = await axiosInstance.get(`/messages/get/all/${conversationId}`);
@@ -100,11 +100,14 @@ export const getMessages = async (conversationId: string) => {
         ...state.storedMessages,
         [conversationId]: resData,
       },
-      displayedMessages: resData,
+      conversationMessagesFetchHistory: [
+        ...state.conversationMessagesFetchHistory.filter(p => p !== conversationId),
+        conversationId
+      ]
+
     }));
   } catch (error) {
     console.log("Request to get messages failed", error);
-    userChatStore.setState({ displayedMessages: [] });
   } finally {
     userChatStore.setState({ isGettingMessages: false });
   }
@@ -197,29 +200,6 @@ export const SearchGiphy = async (
       gifData: [],
     };
   }
-};
-
-export const addGifToFavourite = async (gifData: GifData) => {
-  try {
-    userChatStore.setState((state) => {
-      return {
-        favouriteGifs: [
-          gifData,
-          ...state.favouriteGifs.filter((g) => g.id !== gifData.id),
-        ],
-      };
-    });
-  } catch (error) {}
-};
-
-export const removeGifFromFavourite = async (id: string) => {
-  try {
-    userChatStore.setState((state) => {
-      return {
-        favouriteGifs: [...state.favouriteGifs.filter((g) => g.id !== id)],
-      };
-    });
-  } catch (error) {}
 };
 
 export const getEmojiUrl = (emoji: string) => {
