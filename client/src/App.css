@@ -39,6 +39,14 @@
     width: 300px;
   }
 
+  .gallery.count-1 > *:first-child:has(canvas) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    width: 300px;
+  }
+
   .gallery.count-1 > *:first-child:has(video) {
     height: 350px;
     width: 220px;
@@ -916,4 +924,59 @@ input[type="range"]::-moz-range-thumb {
 
 .MessageItemContextMenuEmoji:hover {
   background-color: var(--chakra-colors-bg-emphasized);
+}
+
+
+.bw-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Track */
+.bw-range::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--chakra-colors-gray-700);
+  border-radius: 999px;
+}
+
+.bw-range::-moz-range-track {
+  height: 4px;
+  background: var(--chakra-colors-gray-700);
+  border-radius: 999px;
+}
+
+/* Thumb */
+.bw-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -6px; /* centers thumb on track */
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--chakra-colors-white);
+  border: 2px solid var(--chakra-colors-black);
+  transition: transform 0.15s ease;
+}
+
+.bw-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--chakra-colors-white);
+  border: 2px solid var(--chakra-colors-black);
+  transition: transform 0.15s ease;
+}
+
+/* Hover / Active */
+.bw-range:hover::-webkit-slider-thumb,
+.bw-range:active::-webkit-slider-thumb {
+  transform: scale(1.1);
+}
+
+.bw-range:hover::-moz-range-thumb,
+.bw-range:active::-moz-range-thumb {
+  transform: scale(1.1);
 }
