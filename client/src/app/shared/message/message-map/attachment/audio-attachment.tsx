@@ -1,6 +1,6 @@
 import { generateCDN_URL } from "@/utils/generalFunctions";
 import { Tooltip } from "@/components/ui/tooltip";
-import { Flex, Float, FormatByte, IconButton, LocaleProvider, Text } from "@chakra-ui/react";
+import { Flex, Float, FormatByte, IconButton, LocaleProvider, Text, Box } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import { FaFileAudio, FaPause, FaPlay } from "react-icons/fa";
 import { getSource } from "./message-attachment-render";
@@ -114,6 +114,10 @@ const AudioAttachment = ({
         buttonFocused: false,
         shouldRenderAudio: false,
     });
+
+    const [isVolOpen, setIsVolOpen] = useState(false);
+    const [volume, setVolume] = useState(1);
+    const [isMuted, setIsMuted] = useState(false);
 
     const audioRef = useRef<HTMLAudioElement>(null);
     const sliderRef = useRef<HTMLInputElement>(null);
@@ -268,102 +272,142 @@ const AudioAttachment = ({
             </Flex>
 
             <Flex
-                rounded="md"
-                bg="bg.emphasized"
-                p="2px"
-                w="full"
+                bg="blackAlpha.800"
+                color="white/60"
                 alignItems="center"
-                gap="5px"
+                gap="8px"
+                w="full"
+                p="5px"
+                rounded="md"
             >
-                <Flex
-                    onClick={handleTogglePlay}
-                    boxSize="25px"
-                    alignItems="center"
-                    justifyContent="center"
-                    color="whiteAlpha.800"
-                    _hover={{
-                        color: "white",
-                    }}
-                >
-                    {audioDetails.isPlaying ? <FaPause /> : <FaPlay />}
+                {/* Play/Pause */}
+                <Flex alignItems="center" justifyContent="center" flexShrink={0} _hover={{ color: "white" }} cursor="pointer" onClick={handleTogglePlay}>
+                    {audioDetails.isPlaying ? <FaPause size={18} /> : <FaPlay size={18} />}
                 </Flex>
 
-                <Flex gap="3px" color="fg.muted" alignItems="center" fontSize="sm">
-                    <Text>{audioDetails.shouldRenderAudio ? formatTime(audioDetails.currentTime) : "-:--"}</Text>/
+                {/* Time display */}
+                <Flex gap="3px" color="whiteAlpha.600" alignItems="center" fontSize="12px" flexShrink={0}>
+                    <Text>{audioDetails.shouldRenderAudio ? formatTime(audioDetails.currentTime) : "-:--"}</Text>
+                    <Text>/</Text>
                     <Text>{audioDetails.shouldRenderAudio ? formatTime(audioDetails.duration) : "-:--"}</Text>
                 </Flex>
 
+                {/* Seek bar */}
                 <input
                     ref={sliderRef}
                     type="range"
                     min={0}
-                    max={audioDetails.duration}
+                    max={audioDetails.duration || 100}
                     step={1}
                     onClick={(e) => e.stopPropagation()}
                     onChange={handleSliderChange}
-                    style={{ flex: 1, accentColor: "black" }}
+                    style={{ flex: 1, minWidth: 0 }}
+                    className="bw-range"
                 />
 
-                <Flex
-                    tabIndex={0}
-                    focusRing="none"
-                    color="whiteAlpha.800"
-                    _hover={{
-                        color: "white",
-                    }}
-                    boxSize="25px"
-                    alignItems="center"
-                    justifyContent="center"
-                    pos="relative"
-                    data-audio-speaker
-                    className="group"
-                    onClick={handleToggleMute}
-                    onFocus={(e) => {
-                        e.stopPropagation();
-                        setAudioDetails((p) => ({ ...p, buttonFocused: true }));
-                    }}
-                    onBlur={() => {
-                        setAudioDetails((p) => ({ ...p, buttonFocused: false }));
-                    }}
-                >
-                    <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={audioDetails.volume}
-                        onChange={(e) => {
-                            const volume = Number(e.target.value);
-                            if (audioRef.current) {
-                                audioRef.current.volume = volume / 100;
-                            }
-                            setAudioDetails((p) => ({ 
-                                ...p, 
-                                volume,
-                                isMuted: volume === 0
-                            }));
+                {/* Volume */}
+                <Flex pos="relative" alignItems="center" justifyContent="center" flexShrink={0}>
+                    {/* Volume popover */}
+                    <Flex
+                        pos="absolute"
+                        bottom="calc(100% + 10px)"
+                        left="50%"
+                        transform={isVolOpen ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(4px)"}
+                        opacity={isVolOpen ? 1 : 0}
+                        pointerEvents={isVolOpen ? "all" : "none"}
+                        transition="opacity 0.15s, transform 0.15s"
+                        flexDir="column"
+                        alignItems="center"
+                        gap="8px"
+                        bg="rgba(20,20,20,0.95)"
+                        border="0.5px solid rgba(255,255,255,0.12)"
+                        borderRadius="10px"
+                        px="10px"
+                        py="10px"
+                        zIndex={20}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <Box fontSize="10px" fontWeight="500" color="whiteAlpha.500" fontFamily="mono" userSelect="none">
+                            {isMuted ? "0%" : `${Math.round(volume * 100)}%`}
+                        </Box>
+
+                        <Box
+                            pos="relative"
+                            h="70px"
+                            w="4px"
+                            bg="whiteAlpha.200"
+                            borderRadius="full"
+                            cursor="pointer"
+                            onMouseDown={(e) => {
+                                e.stopPropagation();
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const calc = (clientY: number) => {
+                                    const ratio = 1 - (clientY - rect.top) / rect.height;
+                                    const newVolume = Math.max(0, Math.min(1, ratio));
+                                    setVolume(newVolume);
+                                    setIsMuted(newVolume === 0);
+                                    if (audioRef.current) {
+                                        audioRef.current.volume = newVolume;
+                                    }
+                                };
+                                calc(e.clientY);
+                                const onMove = (ev: MouseEvent) => calc(ev.clientY);
+                                const onUp = () => {
+                                    window.removeEventListener("mousemove", onMove);
+                                    window.removeEventListener("mouseup", onUp);
+                                };
+                                window.addEventListener("mousemove", onMove);
+                                window.addEventListener("mouseup", onUp);
+                            }}
+                        >
+                            <Box
+                                pos="absolute"
+                                bottom="0" left="0" right="0"
+                                h={`${isMuted ? 0 : Math.round(volume * 100)}%`}
+                                bg="white"
+                                borderRadius="full"
+                                transition="height 0.05s"
+                            />
+                            <Box
+                                pos="absolute"
+                                left="50%"
+                                bottom={`calc(${isMuted ? 0 : Math.round(volume * 100)}% - 6px)`}
+                                transform="translateX(-50%)"
+                                w="12px"
+                                h="12px"
+                                borderRadius="full"
+                                bg="white"
+                                cursor="grab"
+                                transition="bottom 0.05s"
+                                _active={{ transform: "translateX(-50%) scale(1.25)" }}
+                            />
+                        </Box>
+
+                        <Box
+                            w="0" h="0"
+                            borderLeft="5px solid transparent"
+                            borderRight="5px solid transparent"
+                            borderTop="5px solid rgba(20,20,20,0.95)"
+                        />
+                    </Flex>
+
+                    {/* Speaker icon */}
+                    <Flex
+                        alignItems="center"
+                        justifyContent="center"
+                        _hover={{ color: "white", bg: "whiteAlpha.100" }}
+                        borderRadius="6px"
+                        p="4px"
+                        cursor="pointer"
+                        transition="color 0.15s, background 0.15s"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsVolOpen(prev => !prev);
                         }}
-                        style={{
-                            position: "absolute",
-                            bottom: "100%",
-                            left: "50%",
-                            transform: audioDetails.buttonFocused 
-                                ? "translateX(-50%) translateY(0) rotate(-90deg)"
-                                : "translateX(-50%) translateY(40px) rotate(-90deg)",
-                            transformOrigin: "center",
-                            width: "80px",
-                            height: "4px",
-                            opacity: audioDetails.buttonFocused ? 1 : 0,
-                            transition: "opacity 0.1s ease, transform 0.1s ease",
-                            cursor: "pointer",
-                            pointerEvents: audioDetails.buttonFocused ? "auto" : "none"
-                        }}
-                        className="volume-slider"
-                    />
-                    {audioDetails.isMuted ? (
-                        <HiSpeakerXMark style={{ width: "20px", height: "20px" }} />
-                    ) : (
-                        <HiSpeakerWave style={{ width: "20px", height: "20px" }} />
-                    )}
+                    >
+                        {isMuted ? <HiSpeakerXMark size={20} /> : <HiSpeakerWave size={20} />}
+                    </Flex>
                 </Flex>
             </Flex>
 
