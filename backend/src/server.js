@@ -109,6 +109,7 @@ app.use("/api/gif", GifRoute);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
 app.get("/api/emoji/:emojiHex", (req, res) => {
   const { emojiHex } = req.params;
 

@@ -15,6 +15,9 @@ const AttachmentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   fileId: { type: String, required: true },
   filePath: { type: String, required: true },
+  blurHash: {
+    type: String,
+  },
 });
 
 /**
