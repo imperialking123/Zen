@@ -121,7 +121,6 @@ const AudioAttachment = ({
 
     const audioRef = useRef<HTMLAudioElement>(null);
     const sliderRef = useRef<HTMLInputElement>(null);
-    const isMobile = !window.matchMedia("(hover: hover)").matches;
 
     const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = event.target;
@@ -162,36 +161,7 @@ const AudioAttachment = ({
         link.click();
         document.body.removeChild(link);
     };
-    const handleToggleMute = (event: React.MouseEvent<HTMLDivElement>) => {
-        const currentTarget = event.currentTarget;
 
-        if (isMobile) {
-            if (!audioDetails.buttonFocused) {
-                currentTarget.focus();
-                return;
-            }
-
-            if (audioRef.current) {
-                if (audioDetails.isMuted) {
-                    audioRef.current.volume = 1.0;
-                    setAudioDetails((p) => ({ ...p, isMuted: false, volume: 100 }));
-                } else {
-                    audioRef.current.volume = 0.0;
-                    setAudioDetails((p) => ({ ...p, isMuted: true, volume: 0 }));
-                }
-            }
-        } else {
-            if (audioRef.current) {
-                if (audioDetails.isMuted) {
-                    audioRef.current.volume = 1.0;
-                    setAudioDetails((p) => ({ ...p, isMuted: false, volume: 100 }));
-                } else {
-                    audioRef.current.volume = 0.0;
-                    setAudioDetails((p) => ({ ...p, isMuted: true, volume: 0 }));
-                }
-            }
-        }
-    };
 
     const handleMouseEnter = () => {
         if (!audioDetails.shouldRenderAudio) {
