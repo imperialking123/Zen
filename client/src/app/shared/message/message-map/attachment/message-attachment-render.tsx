@@ -7,6 +7,7 @@ import { generateCDN_URL } from "../../../../../utils/generalFunctions";
 import { useTranslation } from "react-i18next";
 import VideoAttachment from "./video-attachment";
 import ImageAttachment from "./image-attachment";
+import VideoAttachmentPlayer from "./video-attachment-player";
 import AudioAttachment from "./audio-attachment";
 import DocumentAttachment from "./document-attachment";
 
@@ -28,9 +29,13 @@ export const getSource = (
 const MessageAttachmentRenderer = ({
   attachments,
   displayAttachmentFullscreen,
+  handleRemoveAttachment,
+  msgIndex
 }: {
   attachments: Attachment[];
   displayAttachmentFullscreen: (fileId: string) => void;
+  handleRemoveAttachment: (msgIndex: number, fileId: string) => void
+  msgIndex: number
 }) => {
   // Get attachments that can be rendered and viewed directly
   const visualAttachments = attachments.filter(
@@ -58,6 +63,8 @@ const MessageAttachmentRenderer = ({
             if (att.type === "image") {
               return (
                 <ImageAttachment
+                  msgIndex={msgIndex}
+                  handleRemoveAttachment={handleRemoveAttachment}
                   isAlone={visualAttachments.length === 1}
                   displayAttachmentFullscreen={displayAttachmentFullscreen}
                   key={att.fileId}
@@ -67,10 +74,20 @@ const MessageAttachmentRenderer = ({
             }
 
             if (att.type === "video") {
+              if (visualAttachments.length  === 1) {
+                return (
+                  <VideoAttachmentPlayer
+                    key={att.fileId}
+                    attachment={att}
+                  />
+                );
+              }
+              
               return (
                 <VideoAttachment
+                  handleRemoveAttachment={handleRemoveAttachment}
+                  msgIndex={msgIndex}
                   displayAttachmentFullscreen={displayAttachmentFullscreen}
-                  isAlone={visualAttachments.length === 1}
                   openFullScreenText={openFullScreenText}
                   key={att.fileId}
                   attachment={att}
