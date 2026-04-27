@@ -5,6 +5,7 @@ import {
   handleForwardMessage,
   handleGetAllMessages,
   handleReactToMesssage,
+  handleRemoveAttachment,
   handleSendMessage,
 } from "../controller/messageController.js";
 import multer from "multer";
@@ -75,5 +76,5 @@ messageRoute.post("/forward", ProtectRoute, handleForwardMessage);
 messageRoute.delete("/delete", ProtectRoute, handleDeleteMessage);
 messageRoute.patch("/react", ProtectRoute, handleReactToMesssage);
 messageRoute.patch("/edit", ProtectRoute, verifyConvoConnected, handleEditMessage);
-
+messageRoute.post("/remove-attachment", ProtectRoute, handleRemoveAttachment);
 export default messageRoute;

@@ -25,12 +25,12 @@ const P2PMessageReactionsRenderer = (
             maxW="65px"
             justifyContent="space-evenly"
             alignItems="center"
-            bg="bg.emphasized"
+            border="1px solid"
+            borderColor="bg.emphasized"
             key={index}
             rounded="8px"
             _hover={{
-              outline: "1px solid",
-              outlineColor: { _light: "gray.300", _dark: "gray.600" },
+              bg: "bg.emphasized"
             }}
             onClick={() => handleReaction(reaction[0])}
           >

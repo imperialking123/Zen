@@ -1,5 +1,5 @@
 import MediaLoadErrorUI from "@/app/shared/message/media-load-error-ui";
-import { getSource } from "@/app/shared/message/message-map/message-attachment-render";
+import { getSource } from "@/app/shared/message/message-map/attachment/message-attachment-render";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { Attachment } from "@/types/schema";
 import { Flex, Image, Text, } from "@chakra-ui/react";

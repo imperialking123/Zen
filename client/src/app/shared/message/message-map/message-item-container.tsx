@@ -45,6 +45,7 @@ type MessageItemContainerProps = {
   handleInitiateReply: (index: number) => void;
   handleShowForwardUI: (index: number) => void;
   handleEditMesssage: (msgIndex: number, text: string) => void
+  handleRemoveAttachment: (msgIndex: number, fileId: string) => void
 };
 
 type MessageFloatingMenuProps = {
@@ -73,7 +74,7 @@ const MessageGifRender = lazy(
 );
 
 const MessageAttachmentRenderer = lazy(
-  () => import("@/app/shared/message/message-map/message-attachment-render"),
+  () => import("@/app/shared/message/message-map/attachment/message-attachment-render"),
 );
 
 const MessageFloatingMenu = memo(
@@ -215,6 +216,7 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
     handleShowContextMenu,
     handleTriggerEditMode,
     handleInitiateReply,
+    handleRemoveAttachment
   } = props;
 
   const hasReactions =
@@ -240,6 +242,7 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
       y: e.clientY,
     });
   };
+
 
   return (
     <div className="messageItem">
@@ -363,6 +366,8 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
             message.attachments &&
             message.attachments.length > 0 && (
               <MessageAttachmentRenderer
+                msgIndex={index}
+                handleRemoveAttachment={handleRemoveAttachment}
                 attachments={message.attachments}
                 displayAttachmentFullscreen={openAttFullScreen}
               />

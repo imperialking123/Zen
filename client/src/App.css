@@ -39,6 +39,14 @@
     width: 300px;
   }
 
+  .gallery.count-1 > *:first-child:has(canvas) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    width: 300px;
+  }
+
   .gallery.count-1 > *:first-child:has(video) {
     height: 350px;
     width: 220px;
@@ -68,7 +76,6 @@
 
   .gallery.count-3 > :first-child {
     grid-row: span 2;
-    width: 280px;
   }
 
   .gallery.count-3 > * {
@@ -916,4 +923,40 @@ input[type="range"]::-moz-range-thumb {
 
 .MessageItemContextMenuEmoji:hover {
   background-color: var(--chakra-colors-bg-emphasized);
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    background: rgba(255, 255, 255, 0.3);
+    height: 3px;
+    border-radius: 2px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    margin-top: -4.5px;
+}
+
+input[type="range"]::-moz-range-track {
+    background: rgba(255, 255, 255, 0.3);
+    height: 3px;
+    border-radius: 2px;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    border: none;
 }

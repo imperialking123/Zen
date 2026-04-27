@@ -1,4 +1,4 @@
-import { CloseButton, Flex, Float, Image, Text } from "@chakra-ui/react";
+import { CloseButton, Flex, Image, Text } from "@chakra-ui/react";
 import { lazy, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { LuPlus, LuX } from "react-icons/lu";
 import { FaFilePdf, FaFilePowerpoint } from "react-icons/fa6";
@@ -19,6 +19,7 @@ import FileDragUI from "@/app/dialog/ui/file-drag-ui";
 import { P2PChatIndicator } from "../activity-indicator";
 import type { GifData } from "@/types";
 import { MdCancel } from "react-icons/md";
+import { getImageBlurHash, getVideoBlurHash } from "@/utils";
 
 export const DOCUMENT_MIME_TYPES: string[] = [
   "application/pdf", // PDF
@@ -102,10 +103,10 @@ const AttachmentPreview = ({
 
   return (
     <Flex
-      minW="180px"
-      maxW="180px"
-      minH="180px"
-      maxH="180px"
+      minW="165px"
+      maxW="165px"
+      minH="165px"
+      maxH="165px"
       key={attachment.fileId}
       pos="relative"
       direction="column"
@@ -113,23 +114,24 @@ const AttachmentPreview = ({
       borderColor="bg.emphasized"
       userSelect="none"
       rounded="md"
-      overflow="hidden"
       alignItems="center"
       justifyContent="center"
+      zIndex={5}
     >
-      <Float offset="5">
-        <CloseButton
-          onClick={handleClick}
-          size="xs"
-          rounded="full"
-          colorPalette="red"
-          variant="solid"
-        >
-          <LuX style={{ width: "18px", height: "18px" }} />
-        </CloseButton>
-      </Float>
+      <CloseButton
+        onClick={handleClick}
+        size="xs"
+        rounded="full"
+        pos="absolute"
+        top="-2"
+        zIndex={20}
+        right="0"
+        variant="surface"
+      >
+        <LuX style={{ width: "18px", height: "18px" }} />
+      </CloseButton>
 
-      <Flex h="80%" justifyContent="center" alignItems="center" w="80%">
+      <Flex h="75%" justifyContent="center" alignItems="center" w="80%">
         {attachment.type === "image" && (
           <Image
             draggable={false}
@@ -137,6 +139,7 @@ const AttachmentPreview = ({
             maxH="full"
             maxW="full"
             objectFit="contain"
+            rounded="10px"
             src={attachment.previewUrl}
           />
         )}
@@ -148,6 +151,7 @@ const AttachmentPreview = ({
               maxWidth: "100%",
               objectFit: "contain",
               pointerEvents: "none",
+              borderRadius: "10px"
             }}
             muted
           />
@@ -397,7 +401,7 @@ const MessageInputUI = ({ inputPlaceHolder }: { inputPlaceHolder: string }) => {
 
   const { t: translate } = useTranslation(["chat"]);
 
-  const addAttachment = (file: File) => {
+  const addAttachment = async (file: File) => {
     const type = getAttachmentType(file.type);
     if (!type) return;
 
@@ -405,6 +409,8 @@ const MessageInputUI = ({ inputPlaceHolder }: { inputPlaceHolder: string }) => {
 
     if (type === "video") {
       const tempId = crypto.randomUUID().slice(0, 15);
+      const videoBlurHash = await getVideoBlurHash(file)
+
 
       const newAttachment: Attachment = {
         type: "video",
@@ -415,8 +421,8 @@ const MessageInputUI = ({ inputPlaceHolder }: { inputPlaceHolder: string }) => {
         size: file.size,
         file: file,
         _id: tempId,
+        blurHash: videoBlurHash
       };
-
       setAttachments((p) => [...p, newAttachment]);
     }
 
@@ -453,10 +459,13 @@ const MessageInputUI = ({ inputPlaceHolder }: { inputPlaceHolder: string }) => {
     }
 
     if (type === "image") {
+      const imageBlurHash = await getImageBlurHash(file)
+
       const tempId = crypto.randomUUID().slice(0, 15);
       const newAttachment: Attachment = {
         type: "image",
         previewUrl: url,
+        blurHash: imageBlurHash,
         fileId: tempId,
         mimeType: file.type as "image/jpeg",
         name: file.name,

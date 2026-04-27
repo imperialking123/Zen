@@ -99,6 +99,7 @@ export interface AttachmentBase {
 export interface ImageAttachment extends AttachmentBase {
   type: "image";
   mimeType: ImageMimeType;
+  blurHash: string;
 }
 
 export interface VideoAttachment extends AttachmentBase {
@@ -107,6 +108,7 @@ export interface VideoAttachment extends AttachmentBase {
   duration?: number; // seconds
   width?: number;
   height?: number;
+  blurHash: string;
 }
 
 export interface AudioAttachment extends AttachmentBase {

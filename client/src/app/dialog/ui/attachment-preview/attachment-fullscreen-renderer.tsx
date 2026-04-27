@@ -25,7 +25,7 @@ import type { Attachment, IUser } from "@/types/schema";
 import { createDialog } from "../../create-dialog";
 import { BsRobot } from "react-icons/bs";
 import { IoCopyOutline } from "react-icons/io5";
-import { getSource } from "@/app/shared/message/message-map/message-attachment-render";
+import { getSource } from "@/app/shared/message/message-map/attachment/message-attachment-render";
 import { toast } from "sonner";
 
 type AttachmentFullScreenPreviewTranslations = {

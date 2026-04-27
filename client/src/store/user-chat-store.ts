@@ -113,8 +113,19 @@ type userChatStoreTypes = {
   conversationMessagesFetchHistory: string[];
   editTextOnMessageId?: string;
   toggleShowEditMessage: (messageId: string) => void;
-  editMessage: (conversationId: string, modifiedText: string, messageId: string) => void;
+  editMessage: (
+    conversationId: string,
+    modifiedText: string,
+    messageId: string,
+  ) => void;
+  removeAttachment: (params: {
+    msgIndex: number;
+    fileId: string;
+    convoId: string;
+    persistToServer?: boolean;
+  }) => Promise<void>;
 };
+
 const userChatStore = create<userChatStoreTypes>((set, get) => ({
   conversations: [],
   selectedConversation: null,
@@ -159,15 +170,15 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     const updatedMessages =
       messages.length > 0
         ? messages.map((msg) => {
-          if (msg._id === tempId) {
-            return {
-              ...msg,
-              status,
-            };
-          } else {
-            return msg;
-          }
-        })
+            if (msg._id === tempId) {
+              return {
+                ...msg,
+                status,
+              };
+            } else {
+              return msg;
+            }
+          })
         : [];
 
     set((s) => {
@@ -219,15 +230,15 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     const updatedMessages =
       allMessages.length > 0
         ? allMessages
-          .filter((msg) => msg._id !== messageId) // Remove the message itself
-          .map((msg) => {
-            // Remove replyTo if it references the deleted message
-            if (msg.replyTo?._id === messageId) {
-              const { replyTo, ...messageWithoutReply } = msg;
-              return messageWithoutReply as IMessage;
-            }
-            return msg;
-          })
+            .filter((msg) => msg._id !== messageId) // Remove the message itself
+            .map((msg) => {
+              // Remove replyTo if it references the deleted message
+              if (msg.replyTo?._id === messageId) {
+                const { replyTo, ...messageWithoutReply } = msg;
+                return messageWithoutReply as IMessage;
+              }
+              return msg;
+            })
         : [];
     set((S) => {
       return {
@@ -435,6 +446,9 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
       for (const attachment of attachments) {
         if (attachment.file) {
           formData.append("attachment", attachment.file);
+          if (attachment.type === "video" || attachment.type === "image") {
+            formData.append("blurHash", attachment.blurHash);
+          }
         }
       }
     }
@@ -639,71 +653,142 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
   conversationMessagesFetchHistory: [],
   toggleShowEditMessage: (messageId) => {
     set((state) => ({
-      editTextOnMessageId: state.editTextOnMessageId === messageId ? undefined : messageId
+      editTextOnMessageId:
+        state.editTextOnMessageId === messageId ? undefined : messageId,
     }));
   },
   editMessage: async (conversationId, modifiedText, messageId) => {
     const messages = get().storedMessages[conversationId] || [];
     const message = messages.find((msg) => msg._id === messageId);
-    
+
     if (!message || message.type !== "default" || !message.text) {
       return;
     }
-    
+
     const originalText = message.text;
-    
+
     if (originalText.trim() === modifiedText.trim()) {
       return;
     }
-    
+
     try {
       set((state) => {
-        const updatedMessages = state.storedMessages[conversationId].map((msg) =>
-          msg._id === messageId ? { ...msg, text: modifiedText, status: "editing" as const } : msg
+        const updatedMessages = state.storedMessages[conversationId].map(
+          (msg) =>
+            msg._id === messageId
+              ? { ...msg, text: modifiedText, status: "editing" as const }
+              : msg,
         );
-        
+
         return {
           storedMessages: {
             ...state.storedMessages,
-            [conversationId]: updatedMessages
-          }
+            [conversationId]: updatedMessages,
+          },
         };
       });
 
       const response = await axiosInstance.patch("/messages/edit", {
         messageId,
         conversationId,
-        modifiedText
+        modifiedText,
       });
 
       set((state) => {
-        const confirmedMessages = state.storedMessages[conversationId].map((msg) =>
-          msg._id === messageId ? { ...msg, ...response.data, status: "sent" as const } : msg
+        const confirmedMessages = state.storedMessages[conversationId].map(
+          (msg) =>
+            msg._id === messageId
+              ? { ...msg, ...response.data, status: "sent" as const }
+              : msg,
         );
-        
+
         return {
           storedMessages: {
             ...state.storedMessages,
-            [conversationId]: confirmedMessages
-          }
+            [conversationId]: confirmedMessages,
+          },
         };
       });
-
     } catch (error) {
       set((state) => {
-        const revertedMessages = state.storedMessages[conversationId].map((msg) =>
-          msg._id === messageId ? { ...msg, text: originalText, status: "sent" as const } : msg
+        const revertedMessages = state.storedMessages[conversationId].map(
+          (msg) =>
+            msg._id === messageId
+              ? { ...msg, text: originalText, status: "sent" as const }
+              : msg,
         );
-        
+
         return {
           storedMessages: {
             ...state.storedMessages,
-            [conversationId]: revertedMessages
-          }
+            [conversationId]: revertedMessages,
+          },
         };
       });
     }
-  }
+  },
+
+  removeAttachment: async ({
+    msgIndex,
+    fileId,
+    convoId,
+    persistToServer = true,
+  }) => {
+    const messages = get().storedMessages[convoId];
+    if (!messages) return;
+
+    const message = messages[msgIndex];
+    if (!message) return;
+
+    if (message.type !== "default" || !message.attachments) return;
+
+    // Update the message by removing the attachment with the specified ID
+    set((state) => {
+      const updatedMessages = [...messages];
+      updatedMessages[msgIndex] = {
+        ...message,
+        attachments:
+          message.attachments?.filter((att) => att.fileId !== fileId) || [],
+        updatedAt: new Date().toISOString(),
+      };
+
+      return {
+        storedMessages: {
+          ...state.storedMessages,
+          [convoId]: updatedMessages,
+        },
+      };
+    });
+
+    if (!persistToServer) return;
+
+    try {
+      await axiosInstance.post("/messages/remove-attachment", {
+        msgIndex,
+        fileId,
+        convoId,
+      });
+    } catch (error) {
+      // Undo the update if server request fails
+      set((state) => {
+        const currentMessages = state.storedMessages[convoId] || [];
+        const revertedMessages = [...currentMessages];
+        const currentMessage = revertedMessages.find(msg => msg._id === message._id);
+        
+        if (currentMessage) {
+          const messageIndex = revertedMessages.findIndex(msg => msg._id === message._id);
+          revertedMessages[messageIndex] = message;
+        }
+        
+        return {
+          storedMessages: {
+            ...state.storedMessages,
+            [convoId]: revertedMessages,
+          },
+        };
+      });
+    }
+  },
 }));
 
 export default userChatStore;
