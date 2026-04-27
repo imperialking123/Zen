@@ -98,8 +98,9 @@ const DeleteMessageUI = ({
         px="10px"
         alignItems="center"
         py="8px"
-        flex="1 1 auto"
+        flex="1  auto"
         minH="0"
+        w="full"
       >
         <MessageItemPreview language={i18n.language} senderProfile={senderProfile} message={message} />
       </Flex>

@@ -38,6 +38,7 @@ const MessagesWrapper = () => {
 
   const toggleShowEditMessage = userChatStore((s) => s.toggleShowEditMessage);
   const editMessage = userChatStore(s => s.editMessage)
+  const removeAttachment = userChatStore(s => s.removeAttachment)
   const { t: translate } = useTranslation(["chat"]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -343,14 +344,11 @@ const MessagesWrapper = () => {
 
   const handleTriggerEditMode = (index: number, closeMenuFirst?: boolean) => {
     const message = displayedMessages[index];
-    console.log(message)
-
     if (!message) return;
 
     if (closeMenuFirst) {
       setShowContextMenu(null);
     }
-
     toggleShowEditMessage(message._id);
   };
 
@@ -371,6 +369,25 @@ const MessagesWrapper = () => {
       editMessage(message.conversationId, text, message._id);
     }
   };
+
+  const handleRemoveAttachment = (msgIndex: number, fileId: string) => {
+
+    const message = displayedMessages[msgIndex]
+    if (!message) return;
+
+    if (message.type !== 'default') return;
+    if (!message.attachments || message.attachments.length <= 1) return;
+
+    
+
+    
+
+    removeAttachment({
+      fileId,
+      msgIndex,
+      convoId: message.conversationId
+    })
+  }
 
   return (
     <Flex
@@ -428,7 +445,8 @@ const MessagesWrapper = () => {
             {showSeparator && (
               <MessageSeparator createdAt={message.createdAt} />
             )}
-            <MessageItemContainer handleEditMesssage={handleEditMesssage}
+            <MessageItemContainer
+              handleRemoveAttachment={handleRemoveAttachment} handleEditMesssage={handleEditMesssage}
               handleInitiateReply={handleInitiateReply}
               handleShowForwardUI={handleShowForwardUI}
               handleTriggerEditMode={handleTriggerEditMode}
