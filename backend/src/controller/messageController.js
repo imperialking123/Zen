@@ -539,3 +539,135 @@ export const handleEditMessage = async (req, res) => {
     return res.status(500).json({ message: "SERVER_ERROR" });
   }
 };
+
+export const handleRemoveAttachment = async (req, res) => {
+  try {
+    const { msgIndex, fileId, convoId } = req.body || {};
+
+    if (msgIndex === undefined || !fileId || !convoId) {
+      return res.status(400).json({ message: "MISSING_REQUIRED_PARAMETERS" });
+    }
+
+    // Validate required fields
+    if (
+      typeof msgIndex !== "number" ||
+      typeof fileId !== "string" ||
+      typeof convoId !== "string"
+    ) {
+      return res.status(400).json({ message: "INVALID_PARAMETERS" });
+    }
+
+
+    const findConversation = await Conversation.findById(convoId);
+
+    if (!findConversation) {
+      return res.status(400).json({ message: "NO_CONVERSATION_TARGET" });
+    }
+
+    const isUserIncluded = findConversation.participants.find((p) =>
+      p.equals(req.user._id),
+    );
+
+    if (!isUserIncluded) {
+      return res.status(400).json({ message: "NOT_A_PARTICIPANT" });
+    }
+
+    // Get all messages in conversation
+    const conversationMessages = await Message.find({ conversationId: convoId });
+
+    // Find the target message by index
+    const targetMessage = conversationMessages[msgIndex];
+
+    if (!targetMessage) {
+      return res.status(404).json({ message: "MESSAGE_NOT_FOUND" });
+    }
+
+    // Check if the attachment exists in the message
+    const attachmentToRemove = targetMessage.attachments.find(att => att.fileId === fileId);
+    if (!attachmentToRemove) {
+      return res.status(404).json({ message: "ATTACHMENT_NOT_FOUND" });
+    }
+
+    // Check if this attachment is used in other messages
+    const messagesWithSameAttachment = await Message.find({
+      _id: { $ne: targetMessage._id }, // Exclude target message
+      $or: [
+        {
+          "attachments.fileId": { $in: [fileId] },
+        },
+        {
+          "attachments.filePath": { $in: [attachmentToRemove.filePath] },
+        },
+      ],
+    });
+
+    const hasSharedAttachment = messagesWithSameAttachment.length > 0;
+
+    // Remove the attachment from the message
+    const updatedMessage = await Message.findByIdAndUpdate(
+      targetMessage._id,
+      { 
+        $pull: { attachments: { fileId: fileId } },
+        updatedAt: new Date().toISOString()
+      },
+      { returnDocument: "after" }
+    );
+
+    // Delete from ImageKit if not shared elsewhere
+    if (!hasSharedAttachment) {
+      try {
+        const deleteRes = await imageKitInstance.bulkDeleteFiles([fileId]);
+        console.log({
+          message: "Deleted attachment file",
+          fileId: fileId,
+          successfullyDeletedFileIds: deleteRes.successfullyDeletedFileIds,
+        });
+      } catch (error) {
+        console.log(
+          "Failed to Delete Attachment File Error --> ",
+          error.message || error,
+        );
+      }
+    }
+
+    // Get other participant for socket emission
+    const otherUserId = findConversation.participants.find(
+      (p) => !p.equals(req.user._id),
+    );
+
+    // Emit to other user
+    if (otherUserId) {
+      emitPayLoadToUser(otherUserId, "EVENT:UPDATE", {
+        type: "REMOVE_ATTACHMENT",
+        conversationId: convoId,
+        messageId: targetMessage._id,
+        fileId: fileId,
+        updatedBy: req.user._id,
+        updatedByUsername: req.user.username,
+      });
+    }
+
+    // Emit to other sessions
+    emitPayloadToOtherSessions(
+      req.user._id,
+      "SYNC:UPDATE",
+      {
+        type: "REMOVE_ATTACHMENT",
+        conversationId: convoId,
+        messageId: targetMessage._id,
+        fileId: fileId,
+        updatedBy: req.user._id,
+        updatedByUsername: req.user.username,
+      },
+      req.session._id,
+    );
+
+    return res.status(200).json(updatedMessage);
+
+  } catch (error) {
+    console.log("Error removing attachment:", error);
+    return res.status(500).json({ message: "SERVER_ERROR" });
+  }
+};
+
+// controller here
