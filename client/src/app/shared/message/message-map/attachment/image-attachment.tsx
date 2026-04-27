@@ -7,13 +7,17 @@ import BlurhashCanvas from "@/app/shared/blur-hash-render";
 import MediaLoadErrorUI from "../../media-load-error-ui";
 
 const ImageAttachment = ({
+    msgIndex,
     attachment,
     isAlone,
     displayAttachmentFullscreen,
+    handleRemoveAttachment
 }: {
     attachment: Extract<Attachment, { type: "image" }>;
     displayAttachmentFullscreen: (fileId: string) => void;
     isAlone: boolean
+    handleRemoveAttachment: (msgIndex: number, fileId: string) => void
+    msgIndex: number
 }) => {
 
     const src = getSource(
@@ -28,6 +32,8 @@ const ImageAttachment = ({
     const handleDeleteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault()
         e.stopPropagation()
+        
+        handleRemoveAttachment(msgIndex, attachment.fileId)
     }
 
     const hasPreview = Boolean(attachment.previewUrl)
