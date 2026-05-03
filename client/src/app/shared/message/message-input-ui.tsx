@@ -506,7 +506,7 @@ const MessageInputUI = ({ inputPlaceHolder }: { inputPlaceHolder: string }) => {
     },
   };
 
-  const insertEmoji = (emoji: string) => {
+  const insertEmoji = (emoji: string) => { 
     const textarea = textAreaRef.current;
     if (!textarea) return;
 
@@ -817,7 +817,8 @@ const MessageInputUI = ({ inputPlaceHolder }: { inputPlaceHolder: string }) => {
         {/*Attachment Container */}
 
         <Flex gap="1" pb="10px" pr="5px" alignItems="flex-end" w="full">
-          <Flex w={{ lg: "6.5%", base: "15%" }} justifyContent="center">
+          <Flex minW={{ base: "16%", lg: "65px" }}
+            maxW={{ base: "16%", lg: "65px" }} justifyContent="center">
             <Flex
               onClick={() => fileInputRef.current?.click()}
               alignItems="center"
@@ -826,6 +827,7 @@ const MessageInputUI = ({ inputPlaceHolder }: { inputPlaceHolder: string }) => {
               w="35px"
               rounded="lg"
               _hover={{ bg: "bg.emphasized" }}
+              style={{ cursor: "pointer" }}
             >
               <LuPlus size={25} />
             </Flex>
