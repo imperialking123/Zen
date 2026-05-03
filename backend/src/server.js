@@ -21,7 +21,7 @@ import morgan from "morgan";
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
-app.use(morgan("common"))
+app.use(morgan("dev"))
 app.use(
   cors({
     origin: FRONTEND_URL,
@@ -114,7 +114,6 @@ const __dirname = path.dirname(__filename);
 
 app.get("/api/emoji/:emojiHex", (req, res) => {
   const { emojiHex } = req.params;
-  console.log(`Emoji request: ${emojiHex}`);
 
   // NOTE:
   // Using the emoji hex directly for now to keep things fast and simple.
