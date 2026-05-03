@@ -92,7 +92,6 @@ const DeleteMessageUI = ({
         my="10px"
         css={scrollCSS}
         overflowY="auto"
-        overflowX="hidden"  // Add this to prevent horizontal scroll
         direction="column"
         gap="5px"
         px="10px"

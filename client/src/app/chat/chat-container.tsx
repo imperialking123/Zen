@@ -23,7 +23,7 @@ const ChatsContainer = () => {
         transition="0.3s ease"
         zIndex={{ base: 20, md: "auto", lg: "auto" }}
         h={{ base: "100dvh", md: "auto", lg: "auto" }}
-        w={{ base: "100vw", md: "55%", lg: "70%" }}
+        w={{ base: "100vw", md: "70%", lg: "73%" }}
         bg={{
           base: "bg",
           md: "inherit",
