@@ -267,6 +267,7 @@ const AudioAttachment = ({
                     ref={sliderRef}
                     type="range"
                     min={0}
+                    defaultValue={0}
                     max={audioDetails.duration || 100}
                     step={1}
                     onClick={(e) => e.stopPropagation()}

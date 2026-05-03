@@ -76,12 +76,13 @@ const LoadingAppUI = () => {
         <Flex gap="10px" justifyContent="center" alignItems="center">
           {Links.map((link, i) => (
             <Link
+              fontSize="sm"
               className="no-focus group "
               target="_blank"
               key={i}
               href={link.url}
             >
-              {link.icon} {link.text}{" "}
+              {link.icon} {link.text}
               <Flex
                 opacity={0}
                 _groupHover={{

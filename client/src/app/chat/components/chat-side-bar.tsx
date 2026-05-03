@@ -2,10 +2,8 @@ import { Flex, Heading, IconButton, Input, InputGroup } from "@chakra-ui/react";
 import { LuPlus } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
 import userChatStore from "@/store/user-chat-store";
-import type { IConversation } from "@/types/schema";
 import CreateDmUI from "./create-dm";
 import ConversationItem from "./conversation-item";
-import { useNavigate } from "react-router-dom";
 
 const ChatSideBar = () => {
   const { t: translate } = useTranslation(["chat"]);
@@ -23,17 +21,12 @@ const ChatSideBar = () => {
     "selectConnectionsDescription",
   );
 
-  const navigate = useNavigate();
 
   const searchConnectionsPlaceHolder = translate(
     "searchConnectionsPlaceHolder",
   );
 
-  const handleSelectConversation = (conversation: IConversation) => {
-    if (conversation && conversation._id !== selectedConversation?._id) {
-      navigate(`${conversation._id}`);
-    }
-  };
+
 
   return (
     <Flex
@@ -43,7 +36,7 @@ const ChatSideBar = () => {
         lg: "colorPalette.muted",
         md: "colorPalette.muted",
       }}
-      w={{ base: "100%", lg: "30%", md: "45%" }}
+      w={{ base: "100%", lg: "27%", md: "30%" }}
       direction="column"
       alignItems="center"
     >
@@ -128,7 +121,6 @@ const ChatSideBar = () => {
             const isSelected = selectedConversation?._id === convo._id;
             return (
               <ConversationItem
-                handleSelectConversation={handleSelectConversation}
                 convoItem={convo}
                 key={
                   convo._id || `temp-${convo.otherUser._id}-${convo.createdAt}`

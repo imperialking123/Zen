@@ -118,5 +118,12 @@
   "EditMessageTextUI": {
     "headerText": "Edit Text",
     "descriptionText": "Make changes to text"
-  }
+  },
+  "messageTopRibbon": {
+    "startVideoCall": "Start video call",
+    "startVoiceCall": "Start voice call",
+    "showUserProfile": "Show user profile",
+    "hideUserProfile": "Hide user profile"
+  },
+  "searchText": "Search"
 }

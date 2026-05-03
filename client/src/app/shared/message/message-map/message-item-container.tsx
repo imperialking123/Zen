@@ -59,6 +59,7 @@ type MessageFloatingMenuProps = {
   handleShowForwardUI: (index: number) => void;
   handleShowContextMenu: (props: ShowContextMenuDesktopT) => void;
   index: number;
+  hasText: boolean
 };
 
 const MessageTextRenderer = lazy(
@@ -87,7 +88,8 @@ const MessageFloatingMenu = memo(
       handleReact,
       handleTriggerEditMode,
       index,
-      handleShowContextMenu
+      handleShowContextMenu,
+      hasText
     } = props;
 
     const randomFavouriteReaction = [
@@ -164,14 +166,14 @@ const MessageFloatingMenu = memo(
           </div>
         </Tooltip>
 
-        <Tooltip {...tooltipProps} content={editMessage}>
+        {hasText && <Tooltip {...tooltipProps} content={editMessage}>
           <div
             onClick={() => handleTriggerEditMode(index)}
             className="MessageItemFloatingMenuButton"
           >
             <BiSolidPencil />
           </div>
-        </Tooltip>
+        </Tooltip>}
 
         <Tooltip content={replyMessage} {...tooltipProps}>
           <div
@@ -219,8 +221,7 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
     handleRemoveAttachment
   } = props;
 
-  const hasReactions =
-    message.reactions && Object.keys(message.reactions).length > 0;
+  
 
   const disPlayGifFullScreen = () => {
     void handleDisplayGifFullScreen(index);
@@ -243,6 +244,10 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
     });
   };
 
+  const hasText = Boolean(message.type === "default" && message.text && message.text.trim.length > 0)
+
+
+  
 
   return (
     <div className="messageItem">
@@ -250,8 +255,8 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
         justifyContent="center"
         alignItems="center"
         h={message.isReplied ? "75px" : showSimpleStyle ? "25px" : "50px"}
-        minW={{ base: "16%", lg: "7%" }}
-        maxW={{ base: "16%", lg: "7%" }}
+        minW={{ base: "16%", lg: "65px" }}
+        maxW={{ base: "16%", lg: "65px" }}
         direction="column"
         alignSelf="stretch"
         gap="3px"
@@ -297,15 +302,9 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
       </Flex>
 
       <Flex
-        pb={
-          showSimpleStyle
-            ? hasReactions
-              ? "5px"
-              : "2.5px"
-            : { base: "3.5px", lg: "3px" }
-        }
+
+        py={showSimpleStyle ? "7px" : "2px" }
         flexDir="column"
-        w="full"
         flex={1}
       >
         {message.isReplied && (
@@ -340,7 +339,7 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
         )}
 
         {/* Message Contents */}
-        <Flex onContextMenu={handleContextMenu} w="full" direction="column">
+        <Flex onContextMenu={handleContextMenu}  direction="column">
           {message.type === "default" && message.text && (
             <MessageTextRenderer
               handleEditMesssage={props.handleEditMesssage}
@@ -383,6 +382,7 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
       </Flex>
 
       <MessageFloatingMenu
+        hasText={hasText}
         handleShowContextMenu={handleShowContextMenu}
         handleShowForwardUI={props.handleShowForwardUI}
         handleInitiateReply={handleInitiateReply}
@@ -403,6 +403,7 @@ export default memo(MessageItemContainer, (prevProps, nextProps) => {
     prevProps.message.updatedAt === nextProps.message.updatedAt &&
     prevProps.message.status === nextProps.message.status &&
     prevProps.message.reactions === nextProps.message.reactions;
+    prevProps.showSimpleStyle === nextProps.showSimpleStyle
 
   return isRerender;
 });
