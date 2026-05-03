@@ -17,8 +17,11 @@ import favouritesRoute from "./routes/favouriteRoute.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createReadStream, existsSync } from "fs";
+import morgan from "morgan";
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
+
+app.use(morgan("dev"))
 app.use(
   cors({
     origin: FRONTEND_URL,
@@ -109,7 +112,6 @@ app.use("/api/gif", GifRoute);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
 app.get("/api/emoji/:emojiHex", (req, res) => {
   const { emojiHex } = req.params;
 
@@ -149,6 +151,7 @@ app.get("/api/emoji/:emojiHex", (req, res) => {
   }
 
   res.setHeader("Content-Type", "image/svg+xml");
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
   createReadStream(filePath).pipe(res);
 });
 
