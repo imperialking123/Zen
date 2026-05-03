@@ -30,22 +30,21 @@ import { toast } from "sonner";
 
 type AttachmentFullScreenPreviewTranslations = {
   openInBrowser: string;
-  openFullScreen: string;
   more: string;
   close: string;
   copyLink: string;
+  copyAttachmentId: string;
+  id: string;
   viewDetails: {
     filename: string;
     size: string;
     text: string;
   };
-  copyAttachmentId: string;
-  id: string;
+  copiedText: string;
+  somethingWentWrongText: string;
   downloadText: string;
   copyImageText: string;
-  somethingWentWrongText: string;
   imageCopiedText: string;
-  copiedText: string;
 };
 
 function Button({
@@ -323,7 +322,6 @@ const AttachmentFullScreenUI = ({
     id,
     viewDetails,
     copiedText,
-    openFullScreen,
     somethingWentWrongText,
     downloadText,
     copyImageText,
@@ -473,7 +471,7 @@ const AttachmentFullScreenUI = ({
   if (!currentAttachment) return;
 
   return (
-    <Flex ref={containerRef} pos="relative" zIndex={5} w="full" minH="full">
+    <Flex bg="blackAlpha.700" ref={containerRef} pos="relative" zIndex={5} w="full" minH="full">
       <Flex
         zIndex={80}
         color="white"
@@ -603,7 +601,6 @@ const AttachmentFullScreenUI = ({
       >
         {currentAttachment && (
           <AttachmentPreviewItem
-            openFullScreenText={openFullScreen}
             attachment={currentAttachment}
           />
         )}
