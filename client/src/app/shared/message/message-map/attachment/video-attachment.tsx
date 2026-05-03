@@ -31,7 +31,7 @@ const VideoAttachment = (props: {
 
 
 
-    
+
 
 
     const handlePlayBtnClick = () => {
@@ -58,7 +58,7 @@ const VideoAttachment = (props: {
 
 
     return (
-        <Flex className="group" overflow="hidden" rounded="5px" pos="relative">
+        <Flex onClick={handlePlayBtnClick} className="group" overflow="hidden" rounded="5px" pos="relative">
 
             {hasPreview && <BlurhashCanvas hash={att.blurHash} />}
 
@@ -85,7 +85,7 @@ const VideoAttachment = (props: {
                 />
 
                 <Button
-                    onClick={handlePlayBtnClick}
+
                     position="absolute"
                     top="50%"
                     left="50%"
@@ -109,7 +109,8 @@ const VideoAttachment = (props: {
                     <Button rounded="md" bg="bg.subtle" color="fg.muted" _hover={{
                         bg: "red.500",
                         color: "white"
-                    }} h="32px" w="32px" size="xs" onClick={() => {
+                    }} h="32px" w="32px" size="xs" onClick={(e) => {
+                        e.stopPropagation()
                         props.handleRemoveAttachment(props.msgIndex, att.fileId);
                     }} >
                         <MdDelete style={{
@@ -122,7 +123,10 @@ const VideoAttachment = (props: {
                         bg: "bg.muted",
                         color: "fg",
                         fontWeight: "bold"
-                    }} h="32px" w="32px" size="xs" onClick={handleDownloadClick} >
+                    }} h="32px" w="32px" size="xs" onClick={(e) => {
+                        e.stopPropagation()
+                        handleDownloadClick()
+                    }} >
                         <TfiDownload strokeWidth={1.3} style={{
                             width: "16px",
                             height: "16px"

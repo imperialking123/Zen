@@ -56,7 +56,7 @@ const MessageAttachmentRenderer = ({
 
 
   return (
-    <Flex mb="5px" maxW={{ lg: "60%", base: "95%" }} direction="column" gap="5px" textAlign="center">
+    <Flex mb="5px" maxW={{ lg: "60%", base: "95%" }} className="message-attachment-item" direction="column" gap="5px" textAlign="center">
       {Array.isArray(visualAttachments) && visualAttachments.length > 0 && (
         <Box w="full" className={`gallery count-${visualAttachments.length}`}>
           {visualAttachments.map((att) => {
@@ -74,7 +74,7 @@ const MessageAttachmentRenderer = ({
             }
 
             if (att.type === "video") {
-              if (visualAttachments.length  === 1) {
+              if (visualAttachments.length === 1) {
                 return (
                   <VideoAttachmentPlayer
                     key={att.fileId}
@@ -82,7 +82,7 @@ const MessageAttachmentRenderer = ({
                   />
                 );
               }
-              
+
               return (
                 <VideoAttachment
                   handleRemoveAttachment={handleRemoveAttachment}

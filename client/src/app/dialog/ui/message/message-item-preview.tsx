@@ -5,7 +5,7 @@ import { getSource } from "@/app/shared/message/message-map/attachment/message-a
 import ShowFullTimeStampTooltip from "@/app/shared/message/show-full-createdAt-tooltip";
 import type { Attachment, GifData, IMessage, IUser } from "@/types/schema";
 import { formatMessageTimestamp, getEmojiUrl } from "@/utils/chatFunctions";
-import { Avatar, Box, Flex, FormatByte,  LocaleProvider, Text } from "@chakra-ui/react";
+import { Avatar, Box, Flex, FormatByte, LocaleProvider, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { AiOutlineLoading } from "react-icons/ai";
 import { BsRobot } from "react-icons/bs";
@@ -83,14 +83,13 @@ const AudioAttachment = ({
       borderColor="bg.emphasized"
       px="10px"
       justifyContent="center"
-      w="98%"
+      w="100%"
       rounded="md"
       direction="column"
       userSelect="none"
       pos="relative"
       className="group"
     >
-
       <Flex alignItems="center" gap="10px">
         <FaFileAudio size={30} />
         <Flex
@@ -186,8 +185,7 @@ const VideoAttachment = ({
 
   return (
     <Flex
-      w="full"
-      maxW="100%"
+      w="100%"
       overflow="hidden"
       rounded="5px"
       pos="relative"
@@ -255,45 +253,44 @@ const VideoAttachment = ({
 };
 
 const ImageAttachment = ({
-    attachment,
+  attachment,
 }: {
-    attachment: Extract<Attachment, { type: "image" }>;
+  attachment: Extract<Attachment, { type: "image" }>;
 }) => {
 
-    const src = getSource(
-        attachment.filePath,
-        attachment.previewUrl,
-        attachment.mimeType,
-    );
+  const src = getSource(
+    attachment.filePath,
+    attachment.previewUrl,
+    attachment.mimeType,
+  );
 
-    const [isLoaded, setIsLoaded] = useState(false)
-    const [isLoadError, setIsLoadError] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [isLoadError, setIsLoadError] = useState(false)
 
-    const hasPreview = Boolean(attachment.previewUrl)
+  const hasPreview = Boolean(attachment.previewUrl)
 
-    return (
-        <Flex
-            w="full"
-            maxW="100%"
-            rounded="5px"
-            overflow="hidden"
-            pos="relative"
-        >
-            {!hasPreview && <>
-                <img
-                    onLoad={() => setIsLoaded(true)}
-                    onError={() => setIsLoadError(true)}
-                    style={{ display: isLoaded ? "block" : "none", height: "100%", width: "100%", objectFit: "cover" }}
-                    src={src}
-                />
-                {!isLoaded && <BlurhashCanvas hash={attachment.blurHash} />}
-                {isLoadError && <MediaLoadErrorUI />}
-            </>}
+  return (
+    <Flex
+      w="100%"
+      rounded="5px"
+      overflow="hidden"
+      pos="relative"
+    >
+      {!hasPreview && <>
+        <img
+          onLoad={() => setIsLoaded(true)}
+          onError={() => setIsLoadError(true)}
+          style={{ display: isLoaded ? "block" : "none", height: "100%", width: "100%", objectFit: "cover" }}
+          src={src}
+        />
+        {!isLoaded && <BlurhashCanvas hash={attachment.blurHash} />}
+        {isLoadError && <MediaLoadErrorUI />}
+      </>}
 
-            {hasPreview && <BlurhashCanvas hash={attachment.blurHash} />}
+      {hasPreview && <BlurhashCanvas hash={attachment.blurHash} />}
 
-        </Flex>
-    );
+    </Flex>
+  );
 };
 
 const DocumentAttachment = ({
@@ -312,7 +309,7 @@ const DocumentAttachment = ({
       borderColor="bg.emphasized"
       px="10px"
       justifyContent="center"
-      w="98%"
+      w="100%"
       rounded="md"
       userSelect="none"
       gap="10px"
@@ -365,7 +362,7 @@ const MessageAttachmentsRender = ({ attachments, language }: { attachments: Atta
   );
 
   return (
-    <Flex w="98%" direction="column" gap="4px" pointerEvents="none">
+    <Flex w="100%" direction="column" gap="4px" pointerEvents="none">
       {Array.isArray(visualAttachments) && visualAttachments.length > 0 && (
         <Box w="full" className={`galleryDeleteUI count-${visualAttachments.length}`}>
           {visualAttachments.map((att) => {
@@ -427,8 +424,7 @@ const MessageGifRender = ({
   return (
     <Flex
       userSelect="none"
-      minW="250px"
-      maxW={{ base: "250px", lg: "320px", md: "300px" }}
+      w="100%"
       direction="column"
       pos="relative"
       overflow="hidden"
@@ -483,7 +479,7 @@ const MessageItemPreview = ({
 }) => {
   return (
     <Flex boxShadow="sm" px="5px" py="10px" rounded="sm" w="full">
-      <Flex justifyContent="center" minW={{ base: "50px", lg: "65px" }} maxW={{ base: "50px", lg: "65px" }} >
+      <Flex justifyContent="center" minW={{ base: "16%", lg: "65px" }} maxW={{ base: "16%", lg: "65px" }} >
         <Avatar.Root>
           <Avatar.Fallback>
             <BsRobot size={20} />
@@ -491,11 +487,10 @@ const MessageItemPreview = ({
         </Avatar.Root>
       </Flex>
 
-      <Flex 
-          w="full" 
-          direction="column"
-          
-        >
+      <Flex
+        w={{ base: "calc(100% - 16%)", lg: "calc(100% - 65px)" }}
+        direction="column"
+      >
         <Flex gap="5px" alignItems="center">
           <Text color="fg.muted" fontWeight="600" userSelect="none">
             {senderProfile?.displayName || "Deleted User"}
@@ -513,11 +508,11 @@ const MessageItemPreview = ({
           </ShowFullTimeStampTooltip>
         </Flex>
 
-        <Flex 
-          w="full" 
-          maxW={{ base: "calc(100vw - 100px)", lg: "calc(100vw - 150px)" }}
-          direction="column" 
-          pointerEvents="none" 
+        <Flex
+          w="full"
+          maxW="full"
+          direction="column"
+          pointerEvents="none"
           userSelect="none"
         >
           {message.type === "default" && message.text && message.text.length > 0 && <MessageTextRenderer text={message.text} />}
