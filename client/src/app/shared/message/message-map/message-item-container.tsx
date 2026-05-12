@@ -245,10 +245,6 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
   };
 
   const hasText = Boolean(message.type === "default" && message.text && message.text.trim.length > 0)
-
-
-  
-
   return (
     <div className="messageItem">
       <Flex
@@ -303,7 +299,7 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
 
       <Flex
 
-        py={showSimpleStyle ? "7px" : "2px" }
+        py={showSimpleStyle ? "2px" : "2px" }
         flexDir="column"
         flex={1}
       >
