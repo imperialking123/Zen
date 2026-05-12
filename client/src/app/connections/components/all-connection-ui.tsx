@@ -3,8 +3,11 @@ import { useTranslation } from "react-i18next";
 import { FiSearch } from "react-icons/fi";
 
 import { ConnectionItem } from "./connection-item";
-import type { ConnectionType } from "@/types/schema";
+import type { ConnectionType, IConversation } from "@/types/schema";
 import userConnectionStore from "@/store/user-connections-store";
+import userChatStore from "@/store/user-chat-store";
+import { useNavigate } from "react-router-dom";
+import userAuthStore from "@/store/user-auth-store";
 
 
 const AllConnectionsUI = ({
@@ -29,6 +32,53 @@ const AllConnectionsUI = ({
   const SEND_MESSAGE_TEXT = translate("SEND_MESSAGE_TEXT");
   const MORE_TEXT = translate("MORE_TEXT");
   const ALL_CONNECTION_HEADER_TEXT = translate("ALL_CONNECTION_HEADER_TEXT");
+
+  const navigate = useNavigate()
+  const authUser = userAuthStore(s => s.authUser!)
+  const handleCreateDM = (connection: ConnectionType) => {
+
+
+
+    const getConvo = userChatStore
+      .getState()
+      .conversations.find((p) =>
+        p.participants.includes(connection.otherUser._id),
+      );
+
+    if (getConvo) {
+      navigate(`/app/chat/${getConvo._id}`);
+      return
+    }
+
+
+
+
+
+
+    const conversationOBJ: IConversation = {
+      createdAt: new Date().toISOString(),
+      updateAt: new Date().toISOString(),
+      _id: crypto.randomUUID(),
+      isTemp: true,
+      otherUser: connection.otherUser,
+      participants: [authUser._id || "", connection.otherUser._id],
+      relation: "connection",
+      connectionId: connection._id,
+      showFor: [connection.otherUser._id, authUser._id],
+    };
+
+
+    userChatStore.setState((state) => {
+      const conversations = [conversationOBJ, ...state.conversations];
+
+      return {
+        conversations,
+      };
+    });
+
+    navigate(`/app/chat/${conversationOBJ._id}`);
+
+  };
 
   return (
     <Flex
@@ -75,6 +125,7 @@ const AllConnectionsUI = ({
 
                 return (
                   <ConnectionItem
+                    handleCreateDM={handleCreateDM}
                     isDeleting={isDeleting}
                     MORE_TEXT={MORE_TEXT}
                     connectionItem={connection}

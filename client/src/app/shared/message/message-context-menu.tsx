@@ -42,6 +42,7 @@ type MessageItemContextMenuProps = {
   handleCopyText: (index: number, closeMenuFirst?: boolean) => void;
   handlePromptForDelete: (index: number, closeMenuFirst?: boolean) => void;
   handleTriggerEditMode: (index: number, closeMenuFirst?: boolean) => void
+  handleReactToMessage: (index: number, emoji: string, closeMenuFirst?: boolean) => void
 };
 
 interface ButtonProps extends ComponentPropsWithRef<"div"> {
@@ -225,7 +226,7 @@ const MessageItemContextMenu = (props: MessageItemContextMenuProps) => {
       opacity={placement.canShow ? 100 : 0}
       pointerEvents={placement.canShow ? "auto" : "none"}
       ref={menuRef}
-      w="185px"
+      w="180px"
       pos="fixed"
       top={placement.top}
       left={placement.left}
@@ -242,6 +243,7 @@ const MessageItemContextMenu = (props: MessageItemContextMenuProps) => {
         {randomFavouriteReaction.map((emoji) => {
           return (
             <div
+              onClick={() => props.handleReactToMessage(props.data.index, emoji.emoji, true)}
               key={emoji.value}
               className="MessageItemContextMenuEmoji"
               style={{

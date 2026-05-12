@@ -179,6 +179,7 @@ export const ConnectionItem = ({
   REMOVE_CONNECTION_TEXT,
   MORE_TEXT,
   isDeleting,
+  handleCreateDM
 }: {
   connectionItem: ConnectionType;
   START_VIDEO_CALL_TEXT: string;
@@ -187,6 +188,7 @@ export const ConnectionItem = ({
   SEND_MESSAGE_TEXT: string;
   MORE_TEXT: string;
   isDeleting: boolean;
+  handleCreateDM: (connection: ConnectionType) => void
 }) => {
   const otherUser = connectionItem.otherUser;
 
@@ -241,6 +243,7 @@ export const ConnectionItem = ({
           content={SEND_MESSAGE_TEXT}
         >
           <IconButton
+            onClick={() => handleCreateDM(connectionItem)}
             _hover={{
               bg: "bg.emphasized",
             }}

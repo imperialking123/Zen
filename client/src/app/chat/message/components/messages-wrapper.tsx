@@ -213,12 +213,16 @@ const MessagesWrapper = () => {
     [displayedMessages, authUser, selectedConversation, createDialog],
   );
 
-  const handleReactToMessage = (index: number, emoji: string) => {
+  const handleReactToMessage = (index: number, emoji: string, closeMenuFirst?: boolean) => {
     const message = displayedMessages[index];
 
     if (!message) return;
 
     if (!authUser || !selectedConversation) return;
+
+    if (closeMenuFirst) {
+      setShowContextMenu(null)
+    }
 
     addOrRemoveP2PMessageReaction({
       conversationId: message.conversationId,
@@ -378,9 +382,9 @@ const MessagesWrapper = () => {
     if (message.type !== 'default') return;
     if (!message.attachments || message.attachments.length <= 1) return;
 
-    
 
-    
+
+
 
     removeAttachment({
       fileId,
@@ -478,6 +482,7 @@ const MessagesWrapper = () => {
 
       {showContextMenu && showContextMenu !== null && (
         <MessageItemContextMenu
+          handleReactToMessage={handleReactToMessage}
           handleTriggerEditMode={handleTriggerEditMode}
           handlePromptForDelete={handlePromptForDelete}
           handleCopyText={handleCopyText}
