@@ -1,5 +1,5 @@
-import userConnectionStore from "../../store/user-connections-store";
-import type { connectionPingType, ConnectionType } from "../../types/schema";
+import userConnectionStore from "../../../store/user-connections-store";
+import type { connectionPingType, ConnectionType } from "../../../types/schema";
 
 export const REMOVE_SENT_PING_WITH_SYNC = (id: string | undefined | null) => {
   if (!id) return;

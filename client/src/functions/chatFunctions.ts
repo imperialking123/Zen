@@ -10,7 +10,7 @@ const translate = i18next.getFixedT(null, "chat");
 import isToday from "dayjs/plugin/isToday";
 import isYesterday from "dayjs/plugin/isYesterday";
 import userChatStore from "../store/user-chat-store";
-import { axiosInstance } from ".";
+import { axiosInstance } from "../utils";
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);

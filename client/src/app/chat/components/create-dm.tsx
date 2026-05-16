@@ -8,12 +8,42 @@ import {
   Button,
   CloseButton,
   Dialog,
+  Flex,
   Input,
   Portal,
+  Text,
   useDialog,
 } from "@chakra-ui/react";
 import { useEffect, useState, type ChangeEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+
+
+const NoConnectionsUI = ({ noConnectionsText }: { noConnectionsText: string }) => {
+  const navigate = useNavigate();
+  
+  return (
+    <Flex 
+      direction="column" 
+      alignItems="center" 
+      justifyContent="center" 
+      w="full" 
+      h="full" 
+      gap="4"
+      p="6"
+    >
+      <Text textAlign="center" color="fg.muted" fontSize="md">
+        {noConnectionsText}
+      </Text>
+      <Text
+        onClick={() => navigate('/app/connections')}
+        cursor="pointer"
+        textDecoration="underline"
+      >
+        Go to Connections
+      </Text>
+    </Flex>
+  );
+}
 
 const CreateDmUI = ({
   children,
@@ -21,12 +51,13 @@ const CreateDmUI = ({
   selectConnectionsDescription,
   selectConnectionsTitle,
   searchConnectionsPlaceHolder,
+  noConnectionsText
 }: {
   children: ReactNode;
   newChatText: string;
   selectConnectionsDescription: string;
   selectConnectionsTitle: string;
-  searchConnectionsPlaceHolder: string;
+  searchConnectionsPlaceHolder: string; noConnectionsText: string
 }) => {
   const connections = userConnectionStore((state) => state.connections);
 
@@ -193,6 +224,10 @@ const CreateDmUI = ({
                 },
               }}
             >
+
+
+              {allConnections.length === 0 && <NoConnectionsUI noConnectionsText={noConnectionsText} />}
+
               {allConnections.length > 0 &&
                 allConnections.map((connectionItem) => {
                   const isSelected =

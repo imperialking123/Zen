@@ -4,7 +4,7 @@ import { getDocumentIcon } from "@/app/shared/message/message-input-ui";
 import { getSource } from "@/app/shared/message/message-map/attachment/message-attachment-render";
 import ShowFullTimeStampTooltip from "@/app/shared/message/show-full-createdAt-tooltip";
 import type { Attachment, GifData, IMessage, IUser } from "@/types/schema";
-import { formatMessageTimestamp, getEmojiUrl } from "@/utils/chatFunctions";
+import { formatMessageTimestamp, getEmojiUrl } from "@/functions/chatFunctions";
 import { Avatar, Box, Flex, FormatByte, LocaleProvider, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { AiOutlineLoading } from "react-icons/ai";

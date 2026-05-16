@@ -26,6 +26,8 @@ const ChatSideBar = () => {
     "searchConnectionsPlaceHolder",
   );
 
+  const noConnectionsText = translate("noConnectionsText")
+
 
 
   return (
@@ -62,6 +64,7 @@ const ChatSideBar = () => {
             {chatTitle}
           </Heading>
           <CreateDmUI
+            noConnectionsText={noConnectionsText}
             searchConnectionsPlaceHolder={searchConnectionsPlaceHolder}
             selectConnectionsTitle={selectConnectionsTitle}
             selectConnectionsDescription={selectConnectionsDescription}

@@ -19,7 +19,7 @@ import { IoChatbubbleSharp } from "react-icons/io5";
 import { useId } from "react";
 import type { connectionPingType, ConnectionType, IUser } from "@/types/schema";
 import { Tooltip } from "@/components/ui/tooltip";
-import { acceptConnectionPing, deleteSentConnectionPing, handleRemoveConnection, ignoreConnectionPing } from "@/utils/connectionsFunctions";
+import { acceptConnectionPing, deleteSentConnectionPing, handleRemoveConnection, ignoreConnectionPing } from "@/functions/connectionsFunctions";
 import { OnlineIndicator } from "@/app/shared/activity-indicator";
 
 

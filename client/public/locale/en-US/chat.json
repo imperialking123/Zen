@@ -1,6 +1,7 @@
 {
   "ChatTitle": "Chats",
   "NewChat": "Create DM",
+  "noConnectionsText": "No connections available. You need connections to create a DM. Connect with people first!",
   "DeleteChat": "Delete Chat",
   "deleteText": "Delete",
   "downLoadText": "Download",

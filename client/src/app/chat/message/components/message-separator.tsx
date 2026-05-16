@@ -1,4 +1,4 @@
-import { formatSeparatorTimestamp } from "@/utils/chatFunctions";
+import { formatSeparatorTimestamp } from "@/functions/chatFunctions";
 import { Flex, Separator, Tag } from "@chakra-ui/react";
 
 

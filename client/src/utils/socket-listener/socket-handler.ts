@@ -2,6 +2,7 @@ import userChatStore from "@/store/user-chat-store";
 import type {
   connectionPingType,
   ConnectionType,
+  IConversation,
   IMessage,
 } from "../../types/schema";
 import { HANDLE_NEW_TYPING, HANDLE_RECEIVE_NEW_MESSAGE } from "./chat-events";
@@ -13,54 +14,96 @@ import {
   HANDLE_REMOVE_USER_PRESENSE,
 } from "./connection-event";
 
-const ADD_EVENT_CASES = {
-  ADD_RECEIVED_PING: "ADD_RECEIVED_PING",
-  ADD_NEW_CONNECTION: "ADD_NEW_CONNECTION",
-  ADD_NEW_PRESENSE: "ADD_NEW_PRESENSE",
-  TYPING_RECEIVE: "TYPING_RECEIVE",
-  RECEIVE_MESSAGE: "RECEIVE_MESSAGE",
+// ADD EVENT TYPES
+type AddReceivedPingEvent = {
+  type: "ADD_RECEIVED_PING";
+  pingData: connectionPingType;
 };
 
-type ADD_EVENT_CASES_TYPES = {
-  type: string;
-  pingData?: connectionPingType;
-  documentId: string;
+type AddNewConnectionEvent = {
+  type: "ADD_NEW_CONNECTION";
   connectionData: ConnectionType;
+  documentId: string;
+};
+
+type AddNewPresenseEvent = {
+  type: "ADD_NEW_PRESENSE";
   userId: string;
   availability: "online" | "offline" | "dnd" | "idle";
-  message: IMessage;
 };
 
-//Lesson.  Do not Join Types like this in the sense that specific response or events get there own types
-
-type REMOVE_EVENT_CASES_TYPES = {
-  type: "REMOVE_CONNECTION" | "REMOVE_USER_PRESENCE" | "DELETE_MESSAGE";
-  documentId: string;
+type TypingReceiveEvent = {
+  type: "TYPING_RECEIVE";
   userId: string;
+};
+
+type ReceiveMessageEvent = {
+  type: "RECEIVE_MESSAGE";
+  message: IMessage;
+  newConversation?: IConversation
+};
+
+type ADD_EVENT_CASES_TYPES =
+  | AddReceivedPingEvent
+  | AddNewConnectionEvent
+  | AddNewPresenseEvent
+  | TypingReceiveEvent
+  | ReceiveMessageEvent;
+
+// REMOVE EVENT TYPES
+type RemoveConnectionEvent = {
+  type: "REMOVE_CONNECTION";
+  documentId: string;
+};
+
+type RemoveUserPresenceEvent = {
+  type: "REMOVE_USER_PRESENCE";
+  userId: string;
+};
+
+type DeleteMessageEvent = {
+  type: "DELETE_MESSAGE";
   conversationId: string;
   messageId: string;
 };
 
+type REMOVE_EVENT_CASES_TYPES =
+  | RemoveConnectionEvent
+  | RemoveUserPresenceEvent
+  | DeleteMessageEvent;
+
+// UPDATE EVENT TYPES
+type ReactEvent = {
+  type: "react";
+  messageId: string;
+  conversationId: string;
+  emoji: string;
+  reactedBy: string;
+  reactedByUsername: string;
+};
+
+type UPDATE_EVENT_CASES_TYPES = ReactEvent;
+
 export const handleEventAdd = (args: ADD_EVENT_CASES_TYPES) => {
   switch (args.type) {
-    case ADD_EVENT_CASES.ADD_RECEIVED_PING:
-      HANDLE_ADD_CONNECTION_PING(args?.pingData || null);
+    case "ADD_RECEIVED_PING":
+      HANDLE_ADD_CONNECTION_PING(args.pingData);
       break;
 
-    case ADD_EVENT_CASES.ADD_NEW_CONNECTION:
+    case "ADD_NEW_CONNECTION":
       HANDLE_ADD_NEW_CONNECTION(args.connectionData, args.documentId);
       break;
 
-    case ADD_EVENT_CASES.ADD_NEW_PRESENSE:
+    case "ADD_NEW_PRESENSE":
       HANDLE_ADD_NEW_PRESENSE(args);
       break;
 
-    case ADD_EVENT_CASES.TYPING_RECEIVE:
+    case "TYPING_RECEIVE":
       HANDLE_NEW_TYPING(args.userId);
       break;
 
-    case ADD_EVENT_CASES.RECEIVE_MESSAGE:
-      HANDLE_RECEIVE_NEW_MESSAGE(args.message);
+    case "RECEIVE_MESSAGE":
+      HANDLE_RECEIVE_NEW_MESSAGE(args.message, args.newConversation);
       break;
   }
 };
@@ -88,23 +131,7 @@ export const handleEventRemove = (args: REMOVE_EVENT_CASES_TYPES) => {
   }
 };
 
-type ReactArgs = {
-  messageId: string;
-  emoji: string;
-  reactedBy: string;
-  reactedByUsername: string;
-  type: "react";
-  conversationId: string;
-};
-
-type justArg = {
-  type: "fornow";
-  payload: "foo bar";
-};
-
-type handleEventUpdateArgs = ReactArgs | justArg;
-
-export const handleEventUpdate = (args: handleEventUpdateArgs) => {
+export const handleEventUpdate = (args: UPDATE_EVENT_CASES_TYPES) => {
   switch (args.type) {
     case "react":
       addOrRemoveP2PMessageReaction({
@@ -115,9 +142,6 @@ export const handleEventUpdate = (args: handleEventUpdateArgs) => {
         username: args.reactedByUsername,
         persistToServer: false,
       });
-      break;
-
-    case "fornow":
       break;
   }
 };

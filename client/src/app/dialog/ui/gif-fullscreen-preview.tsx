@@ -1,6 +1,6 @@
 import type { GifData } from "@/types";
 import type { IUser } from "@/types/schema";
-import { formatDateForTooltip } from "@/utils/chatFunctions";
+import { formatDateForTooltip } from "@/functions/chatFunctions";
 import { Avatar, Flex, Text } from "@chakra-ui/react";
 import { FaX } from "react-icons/fa6";
 import { createDialog } from "../create-dialog";

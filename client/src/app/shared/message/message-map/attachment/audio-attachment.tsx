@@ -1,4 +1,4 @@
-import { generateCDN_URL } from "@/utils/generalFunctions";
+import { generateCDN_URL } from "@/functions/generalFunctions";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Flex, Float, FormatByte, IconButton, LocaleProvider, Text, Box } from "@chakra-ui/react";
 import { useRef, useState } from "react";

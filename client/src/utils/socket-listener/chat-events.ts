@@ -23,15 +23,45 @@ export const HANDLE_NEW_TYPING = (userId: string) => {
   timeoutMap.set(userId, timeout);
 };
 
-export const HANDLE_RECEIVE_NEW_MESSAGE = async (message: IMessage) => {
-  if (!message?.conversationId || !message?._id) {
-    console.error("Invalid message: missing required fields");
-    return;
-  }
+export const HANDLE_RECEIVE_NEW_MESSAGE = async (message: IMessage, newConversation?: IConversation) => {
 
   try {
     const { conversations, hasMoreBottom, selectedConversation } =
       userChatStore.getState();
+
+    userPresenceStore.getState().removeTyping(message.senderId);
+
+    if (newConversation) {
+      userChatStore.getState().addConversation(newConversation);
+
+      // Check if the user has a temp conversation selected that matches this new one
+      // by comparing connectionId — this is the "uno reverse" of handleSentMessageResponse
+      const isViewingMatchingTempConvo =
+        selectedConversation?.isTemp &&
+        selectedConversation?.connectionId &&
+        newConversation.connectionId &&
+        selectedConversation.connectionId === newConversation.connectionId;
+
+      if (isViewingMatchingTempConvo) {
+        userChatStore.setState((state) => {
+          const tempConvoId = selectedConversation!._id;
+          const existingMessages = state.storedMessages[tempConvoId] || [];
+
+          return {
+            selectedConversation: newConversation,
+            storedMessages: {
+              ...state.storedMessages,
+              // Move messages from temp convo key to real convo key
+              [newConversation._id]: [
+                ...existingMessages.filter((m) => m._id !== message._id),
+                message,
+              ],
+            },
+          };
+        });
+        return;
+      }
+    }
 
     let findConvo = conversations.find((p) => p._id === message.conversationId);
 
