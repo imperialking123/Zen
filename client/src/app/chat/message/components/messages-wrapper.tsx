@@ -22,7 +22,7 @@ import AttachmentFullScreenUI from "@/app/dialog/ui/attachment-preview/attachmen
 import GifFullScreenPreviewUI from "@/app/dialog/ui/gif-fullscreen-preview";
 import MessageItemContextMenu from "@/app/shared/message/message-context-menu";
 import type { IMessage } from "@/types/schema";
-import { initiateReplyTo } from "@/utils/chatFunctions";
+import { initiateReplyTo } from "@/functions/chatFunctions";
 import ForwardMessageUI from "@/app/dialog/ui/message/forward-message-ui";
 import DeleteMessageUI from "@/app/dialog/ui/message/delete-message-ui";
 

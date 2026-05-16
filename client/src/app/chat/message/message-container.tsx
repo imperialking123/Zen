@@ -7,7 +7,7 @@ import MessagesWrapper from "./components/messages-wrapper";
 import { useEffect, useState } from "react";
 import AuthLogo from "@/components/ui/logo-export";
 import type { IConversation } from "@/types/schema";
-import { getMessages } from "@/utils/chatFunctions";
+import { getMessages } from "@/functions/chatFunctions";
 import MessageInputUI from "@/app/shared/message/message-input-ui";
 import { useNavigate, useParams } from "react-router-dom";
 import userChatStore from "@/store/user-chat-store";

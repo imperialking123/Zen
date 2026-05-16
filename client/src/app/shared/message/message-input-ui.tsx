@@ -11,7 +11,7 @@ import userChatStore from "@/store/user-chat-store";
 import userAuthStore from "@/store/user-auth-store";
 import { createDialog } from "@/app/dialog/create-dialog";
 import AttachmentLimitUI from "@/app/dialog/ui/max-attachment-ui";
-import { removeInitiatedReply } from "@/utils/chatFunctions";
+import { removeInitiatedReply } from "@/functions/chatFunctions";
 import FileTooLargeUI from "@/app/dialog/ui/file-too-large";
 import FileInvalidUI from "@/app/dialog/ui/file-invalid-ui";
 import { useTranslation } from "react-i18next";

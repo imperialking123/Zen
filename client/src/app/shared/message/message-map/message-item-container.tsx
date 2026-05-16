@@ -3,7 +3,7 @@ import {
   formatDateSimpleStyle,
   formatMessageTimestamp,
   getEmojiUrl,
-} from "@/utils/chatFunctions";
+} from "@/functions/chatFunctions";
 import { Text } from "@chakra-ui/react/text";
 import { Flex } from "@chakra-ui/react/flex";
 import { Avatar } from "@chakra-ui/react/avatar";

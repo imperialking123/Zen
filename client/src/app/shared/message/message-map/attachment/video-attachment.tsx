@@ -7,7 +7,7 @@ import { MdDelete } from "react-icons/md";
 import { TfiDownload } from "react-icons/tfi";
 import MediaLoadErrorUI from "../../media-load-error-ui";
 import BlurhashCanvas from "@/app/shared/blur-hash-render";
-import { generateCDN_URL } from "@/utils/generalFunctions";
+import { generateCDN_URL } from "@/functions/generalFunctions";
 
 
 const VideoAttachment = (props: {

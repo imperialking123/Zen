@@ -1,85 +1,59 @@
 import { Box, Flex, Float, Text } from "@chakra-ui/react";
-import { MdDoNotDisturbOn } from "react-icons/md";
-import { IoMoonSharp } from "react-icons/io5";
-import { FaCircle } from "react-icons/fa";
-import { FiCircle } from "react-icons/fi";
 import { BeatLoader } from "react-spinners";
 import { useTranslation } from "react-i18next";
 import userPresenseStore from "@/store/user-presense-store";
 
 export const OnlineIndicator = ({ userId }: { userId: string }) => {
   const presence = userPresenseStore((state) => state.onlinePresenses[userId]);
-
   const isOnline = !!presence;
 
-  const getIndicatorStyles = () => {
-    if (!isOnline) {
-      return {
-        background: "bg",
-        color: "fg.muted",
-      };
-    }
-
-    if (presence.availability === "dnd") {
-      return {
-        background: "bg",
-        color: "red.500",
-        borderColor: "bg.emphasized",
-        borderWidth: "0px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1px",
-      };
-    }
-
-    if (presence.availability === "idle") {
-      return {
-        background: "bg",
-        color: "yellow.500",
-        borderColor: "bg.emphasized",
-        borderWidth: "0px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1px",
-      };
-    }
-
-    // Online state
-    return {
-      background: "bg",
-      color: "green.500",
-      borderColor: "bg.emphasized",
-
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "1px",
-    };
+  const getIndicatorConfig = () => {
+    if (!isOnline) return { color: "#80848e", status: "offline" };
+    if (presence.availability === "dnd") return { color: "#f23f43", status: "dnd" };
+    if (presence.availability === "idle") return { color: "#f0b232", status: "idle" };
+    return { color: "#23a55a", status: "online" };
   };
+
+  const { color, status } = getIndicatorConfig();
 
   return (
     <Float placement="bottom-end" offset="2">
-      <Box p="3px" rounded="full" background="bg">
+      <Box
+        w="16px"
+        h="16px"
+        rounded="full"
+        bg="bg"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        transition="all 0.3s ease-in-out"
+      >
         <Box
+          w="10px"
+          h="10px"
           rounded="full"
-          transition="all 0.3s ease-in-out"
-          {...getIndicatorStyles()}
+          bg={status === "offline" ? "transparent" : color}
+          border={status === "offline" ? "2px solid" : "none"}
+          borderColor={color}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          position="relative"
         >
-          {isOnline && presence.availability === "dnd" && (
-            <MdDoNotDisturbOn size={11.5} />
+          {status === "dnd" && (
+            <Box w="6px" h="2px" bg="bg" rounded="full" />
           )}
-
-          {isOnline && presence.availability === "idle" && (
-            <IoMoonSharp size={11.5} />
+          {status === "idle" && (
+            <Box
+              position="absolute"
+              top="-3px"
+              left="-3px"
+              w="7px"
+              h="7px"
+              rounded="full"
+              bg="bg"
+            />
           )}
-
-          {isOnline && presence.availability === "online" && (
-            <FaCircle size={11.5} />
-          )}
-
-          {!isOnline && <FiCircle strokeWidth={4.5} size={11.5} />}
         </Box>
       </Box>
     </Float>
@@ -92,116 +66,74 @@ export const ConversationActivityIndicator = ({
   userId: string;
 }) => {
   const presence = userPresenseStore((state) => state.onlinePresenses[userId]);
-
   const isOnline = !!presence;
-
   const typing = userPresenseStore((state) => state.typingEvents[userId]);
   const isTyping = !!typing;
 
-  const getIndicatorStyles = () => {
-    if (isTyping) {
-      return {};
-    }
-
-    if (!isOnline) {
-      return {
-        background: "bg",
-        color: "fg.muted",
-      };
-    }
-
-    if (presence.availability === "dnd") {
-      return {
-        background: "bg",
-        color: "red.500",
-        borderColor: "bg.emphasized",
-        borderWidth: "0px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1px",
-      };
-    }
-
-    if (presence.availability === "idle") {
-      return {
-        background: "bg",
-        color: "yellow.500",
-        borderColor: "bg.emphasized",
-        borderWidth: "0px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1px",
-      };
-    }
-
-    // Online state
-    return {
-      background: "bg",
-      color: "green.500",
-      borderColor: "bg.emphasized",
-
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "1px",
-    };
+  const getStatusConfig = () => {
+    if (!isOnline) return { color: "#80848e", status: "offline" };
+    if (presence.availability === "dnd") return { color: "#f23f43", status: "dnd" };
+    if (presence.availability === "idle") return { color: "#f0b232", status: "idle" };
+    return { color: "#23a55a", status: "online" };
   };
 
-  // typing Indicator Colors -->
-  // offline and idle bg = "fg.muted"
-  // online bg = "green.600"
-  // dnd bg = "red.500"
+  const { color, status } = getStatusConfig();
 
   return (
     <Float placement="bottom-end" offset="2">
       <Box
-        p="3px"
+        p={isTyping ? "0px" : "3px"}
         rounded="full"
-        bg={
-          isTyping
-            ? !isOnline
-              ? "fg.muted"
-              : presence.availability === "dnd"
-                ? "red.500"
-                : presence.availability === "idle"
-                  ? "fg.muted"
-                  : "green.600"
-            : "bg"
-        }
+        bg="bg"
+        transition="all 0.3s ease-in-out"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
       >
-        <Box
-          rounded="full"
-          transition="all 0.3s ease-in-out"
-          {...getIndicatorStyles()}
-        >
-          {isOnline && !isTyping && presence.availability === "dnd" && (
-            <MdDoNotDisturbOn size={11.5} />
-          )}
-
-          {isOnline && !isTyping && presence.availability === "idle" && (
-            <IoMoonSharp size={11.5} />
-          )}
-
-          {isOnline && !isTyping && presence.availability === "online" && (
-            <FaCircle size={11.5} />
-          )}
-
-          {!isOnline && !isTyping && <FiCircle strokeWidth={4.5} size={11.5} />}
-
-          {isTyping && (
+        {isTyping ? (
+          <Box
+            bg={color}
+            rounded="full"
+            px="6px"
+            h="16px"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+          >
             <BeatLoader
               color="white"
               margin={1}
-              cssOverride={{
-                padding: "0px",
-                display: "flex",
-              }}
-              size={5}
+              size={4}
+              cssOverride={{ display: "flex" }}
             />
-          )}
-        </Box>
+          </Box>
+        ) : (
+          <Box
+            w="10px"
+            h="10px"
+            rounded="full"
+            bg={status === "offline" ? "transparent" : color}
+            border={status === "offline" ? "2px solid" : "none"}
+            borderColor={color}
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            position="relative"
+          >
+            {status === "dnd" && <Box w="6px" h="2px" bg="bg" rounded="full" />}
+            {status === "idle" && (
+              <Box
+                position="absolute"
+                top="-3px"
+                left="-3px"
+                w="7px"
+                h="7px"
+                rounded="full"
+                bg="bg"
+              />
+            )}
+          </Box>
+        )}
       </Box>
     </Float>
   );
