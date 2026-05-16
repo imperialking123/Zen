@@ -11,8 +11,9 @@ import {
 import multer from "multer";
 import ProtectRoute from "../middleware/protectUser.js";
 
-import UploadFilesMiddleWare from '../middleware/upload-files.js'
-import verifyConvoConnected from '../middleware/verify-convo-connected.js'
+import UploadFilesMiddleWare from "../middleware/upload-files.js";
+import verifyConvoConnected from "../middleware/verify-convo-connected.js";
+import EnsureConversationAccess from "../middleware/ensure-conversation-access.js";
 
 const messageRoute = Router();
 
@@ -58,23 +59,36 @@ const limits = {
 
 const upload = multer({ storage, fileFilter, limits });
 
-
 messageRoute.get(
   "/get/all/:conversationId",
   ProtectRoute,
   handleGetAllMessages,
 );
 
-messageRoute.post("/send", ProtectRoute, upload.fields([
-  {
-    name: "attachment",
-    maxCount: MAX_ATTACHMENT,
-  },
-]), UploadFilesMiddleWare, handleSendMessage);
+messageRoute.post(
+  "/send",
+  ProtectRoute,
+  upload.fields([
+    {
+      name: "attachment",
+      maxCount: MAX_ATTACHMENT,
+    },
+  ]),
+  EnsureConversationAccess,
+  UploadFilesMiddleWare,
+  handleSendMessage,
+);
+
 messageRoute.post("/forward", ProtectRoute, handleForwardMessage);
 
 messageRoute.delete("/delete", ProtectRoute, handleDeleteMessage);
 messageRoute.patch("/react", ProtectRoute, handleReactToMesssage);
-messageRoute.patch("/edit", ProtectRoute, verifyConvoConnected, handleEditMessage);
+messageRoute.patch(
+  "/edit",
+  ProtectRoute,
+  verifyConvoConnected,
+  handleEditMessage,
+);
+
 messageRoute.post("/remove-attachment", ProtectRoute, handleRemoveAttachment);
 export default messageRoute;

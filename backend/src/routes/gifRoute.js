@@ -163,12 +163,7 @@ GifRoute.get("/categories/:lang", async (req, res) => {
         }
       }) : []
 
-      console.log(formatedResults)
-
       return res.status(200).json({ tags: formatedResults })
-
-
-
     }
 
     if (PREFERED_GIF_HANDLER === "tenor") {

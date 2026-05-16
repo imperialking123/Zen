@@ -1,5 +1,6 @@
 import Message from "../model/messageModel.js";
 import Conversation from "../model/conversationModel.js";
+import User from "../model/userModel.js";
 import imageKitInstance from "../lib/kitUploader.js";
 import { emitPayloadToOtherSessions, emitPayLoadToUser } from "../lib/io.js";
 
@@ -7,32 +8,29 @@ export const handleSendMessage = async (req, res) => {
   try {
     const user = req.user;
     const attachments = req.uploadedAttachments;
+    const conversation = req.conversation;
+    const isNewConversation = Boolean(req.isNewConversation)
+    const session = req.session
 
-    const { conversationId, type, text, receiverId, replyTo } = req.body || {};
-
-    if (!type || typeof type !== "string")
-      return res.status(400).json({ message: "MESSAGE_TYPE_REQUIRED" });
-
-    if (!conversationId || typeof conversationId !== "string")
-      return res.status(400).json({ message: "NO_TARGET_CONVO_ID_REQUIRED" });
-
-    const getConversation = await Conversation.findById(conversationId);
-
-    if (!getConversation)
-      return res.status(404).json({ message: "INVALID_CONVO_ID" });
-
-    if (!getConversation.participants.some((p) => p.equals(user._id))) {
-      return res.status(403).json({ message: "UNAUTHORIZED" });
+    if (!conversation) {
+      return res.status(400).json({ message: "NO_CONVERSATION_TARGET" });
     }
 
-    const otherUserId = getConversation.participants.find(
-      (p) => !p.equals(user._id),
+    const otherUserId = conversation.participants.find(
+      (p) => p.toString() !== user._id.toString(),
     );
+
+    const { type, text, receiverId, replyTo } = req.body || {};
+
+    if (!type || !["default", "gif"].includes(type)) {
+      return res.status(400).json({ message: "INVALID_MESSAGE_TYPE" });
+    }
+
 
     const messageObj = {
       senderId: user._id,
       receiverId: otherUserId || receiverId,
-      conversationId: getConversation._id,
+      conversationId: conversation._id,
       type: type,
     };
 
@@ -61,7 +59,7 @@ export const handleSendMessage = async (req, res) => {
       const { id, preview, full } = req?.body?.gif || {};
 
       if (!id || !preview || !full) {
-        return res.status(400).json({ message: "Invalid gif data" });
+        return res.status(400).json({ message: "INVALID_GIF_DATA" });
       }
 
       messageObj.gif = req.body.gif;
@@ -85,7 +83,48 @@ export const handleSendMessage = async (req, res) => {
       messageReturnObject.replyTo = repliedMessageVar;
     }
 
-    return res.status(201).json(messageReturnObject);
+    const returnObject = {
+      message: messageReturnObject,
+    }
+
+    const receiverPayload = {
+      type: "RECEIVE_MESSAGE",
+      message: messageReturnObject,
+    }
+
+    const otherDevicesPayload = {
+      message: messageReturnObject,
+      type: "RECEIVE_MESSAGE"
+    }
+
+    if (isNewConversation) {
+      const senderUser = user;
+      const receiverUser = await User.findById(otherUserId);
+
+      const conversationForReceiver = {
+        ...conversation.toObject(),
+        otherUser: senderUser,
+      };
+
+      const conversationForSender = {
+        ...conversation.toObject(),
+        otherUser: receiverUser.toObject(),
+      };
+
+      receiverPayload["newConversation"] = conversationForReceiver;
+      returnObject["newConversation"] = conversationForSender;
+      otherDevicesPayload["newConversation"] = conversationForSender;
+    }
+
+    emitPayLoadToUser(otherUserId, "EVENT:ADD", receiverPayload)
+    emitPayloadToOtherSessions(user._id, "EVENT:ADD", otherDevicesPayload, session._id)
+
+
+
+
+
+
+    return res.status(201).json(returnObject);
   } catch (error) {
     console.log(
       "Error on #handleSendMessage #messageController.js Error --->",
@@ -557,7 +596,6 @@ export const handleRemoveAttachment = async (req, res) => {
       return res.status(400).json({ message: "INVALID_PARAMETERS" });
     }
 
-
     const findConversation = await Conversation.findById(convoId);
 
     if (!findConversation) {
@@ -573,7 +611,9 @@ export const handleRemoveAttachment = async (req, res) => {
     }
 
     // Get all messages in conversation
-    const conversationMessages = await Message.find({ conversationId: convoId });
+    const conversationMessages = await Message.find({
+      conversationId: convoId,
+    });
 
     // Find the target message by index
     const targetMessage = conversationMessages[msgIndex];
@@ -583,7 +623,9 @@ export const handleRemoveAttachment = async (req, res) => {
     }
 
     // Check if the attachment exists in the message
-    const attachmentToRemove = targetMessage.attachments.find(att => att.fileId === fileId);
+    const attachmentToRemove = targetMessage.attachments.find(
+      (att) => att.fileId === fileId,
+    );
     if (!attachmentToRemove) {
       return res.status(404).json({ message: "ATTACHMENT_NOT_FOUND" });
     }
@@ -606,11 +648,11 @@ export const handleRemoveAttachment = async (req, res) => {
     // Remove the attachment from the message
     const updatedMessage = await Message.findByIdAndUpdate(
       targetMessage._id,
-      { 
+      {
         $pull: { attachments: { fileId: fileId } },
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
 
     // Delete from ImageKit if not shared elsewhere
@@ -663,11 +705,8 @@ export const handleRemoveAttachment = async (req, res) => {
     );
 
     return res.status(200).json(updatedMessage);
-
   } catch (error) {
     console.log("Error removing attachment:", error);
     return res.status(500).json({ message: "SERVER_ERROR" });
   }
 };
-
-// controller here
