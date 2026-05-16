@@ -8,7 +8,7 @@ import LoginContainer from "./pages/auth/login/loginContainer";
 import SignUpContainer from "./pages/auth/signup/signUpContainer";
 import AppContainer from "./app/app-container";
 import userAuthStore from "./store/user-auth-store";
-import { handleCheckAuth } from "./utils/authFunction";
+import { handleCheckAuth } from "./functions/authFunction";
 import HomePageContainer from "./pages/home-page/home-page-container";
 import ChatsContainer from "./app/chat/chat-container";
 import MomentsContainer from "./app/moment/momments-container";
@@ -19,11 +19,12 @@ import {
   handleEventRemove,
   handleEventUpdate,
 } from "./utils/socket-listener/socket-handler";
-import { handleSyncAdd, handleSyncRemove, handleSyncUpdate } from "./utils/sync/sync";
+
 import MessageContainer, {
   NoConversationSelectedUI,
 } from "./app/chat/message/message-container";
 import RouteNotFound from "./app/components/ui/not-found";
+import { handleSyncAdd, handleSyncRemove, handleSyncUpdate } from "./utils/socket-listener/sync/sync";
 
 const LoadingAppUI = lazy(() => import("./app/loading-app-container"));
 
