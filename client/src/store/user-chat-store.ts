@@ -90,25 +90,13 @@ type userChatStoreTypes = {
   }) => void;
 
   sendP2PDefaultMessage: (props: sendP2PDefaultMessageType) => void;
+  handleSentMessageResponse: (
+    message: IMessage,
+    tempConversationId: string,
+    msgTempId: string,
+    newConversation?: IConversation,
+  ) => void;
   addMessageToState: (message: IMessage, conversationId: string) => void;
-  updatedMessageOnConvoCreate: ({
-    message,
-    tempConvoId,
-    receivedConvoData,
-  }: {
-    message: IMessage;
-    tempConvoId: string;
-    receivedConvoData: IConversation;
-  }) => void;
-  updateMessageOnSendComplete: ({
-    message,
-    conversationId,
-    tempId,
-  }: {
-    message: IMessage;
-    conversationId: string;
-    tempId: string;
-  }) => void;
   sendP2PGifMessage: (props: sendP2PGifMessageProps) => void;
   conversationMessagesFetchHistory: string[];
   editTextOnMessageId?: string;
@@ -170,15 +158,15 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     const updatedMessages =
       messages.length > 0
         ? messages.map((msg) => {
-            if (msg._id === tempId) {
-              return {
-                ...msg,
-                status,
-              };
-            } else {
-              return msg;
-            }
-          })
+          if (msg._id === tempId) {
+            return {
+              ...msg,
+              status,
+            };
+          } else {
+            return msg;
+          }
+        })
         : [];
 
     set((s) => {
@@ -230,15 +218,15 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     const updatedMessages =
       allMessages.length > 0
         ? allMessages
-            .filter((msg) => msg._id !== messageId) // Remove the message itself
-            .map((msg) => {
-              // Remove replyTo if it references the deleted message
-              if (msg.replyTo?._id === messageId) {
-                const { replyTo, ...messageWithoutReply } = msg;
-                return messageWithoutReply as IMessage;
-              }
-              return msg;
-            })
+          .filter((msg) => msg._id !== messageId) // Remove the message itself
+          .map((msg) => {
+            // Remove replyTo if it references the deleted message
+            if (msg.replyTo?._id === messageId) {
+              const { replyTo, ...messageWithoutReply } = msg;
+              return messageWithoutReply as IMessage;
+            }
+            return msg;
+          })
         : [];
     set((S) => {
       return {
@@ -378,7 +366,6 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
       newMessage["attachments"] = attachments;
     }
 
-    // Update Message To State.
     set((s) => {
       const getInitiatedReply = s.p2pInitiatedReply;
       delete getInitiatedReply[conversationId];
@@ -391,47 +378,11 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     let getConvo = get().conversations.find((p) => p._id === conversationId);
     /*---------------- */
 
-    // Settle Conversation Wall by Getting and updating state
-    if (!getConvo || getConvo.isTemp) {
-      try {
-        const convoGetRes = await axiosInstance.post<IConversation>(
-          "/conversations/create",
-          {
-            connectionId,
-          },
-        );
-
-        getConvo = convoGetRes.data;
-
-        set((s) => ({
-          selectedConversation:
-            s.selectedConversation?._id === conversationId
-              ? convoGetRes.data
-              : s.selectedConversation,
-        }));
-      } catch (error) {
-        // Show a UI and force user to refresh
-        console.log("Failed to retrieve convo Data. Something Went Wrong");
-        get().updateMessageStatus({
-          status: "failed",
-          conversationId,
-          tempId: msgTempId,
-        });
-      }
-    }
-    if (!getConvo) {
-      get().updateMessageStatus({
-        status: "failed",
-        conversationId,
-        tempId: msgTempId,
-      });
-      return;
-    }
 
     const formData = new FormData();
-
     formData.append("receiverId", newMessage.receiverId);
     formData.append("conversationId", newMessage.conversationId);
+    formData.append("connectionId", connectionId);
     formData.append("type", "default");
 
     if (textInput && textInput.length > 0) {
@@ -440,6 +391,9 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
 
     if (newMessage.replyTo) {
       formData.append("replyTo", replyTo);
+    }
+
+    if (!getConvo) {
     }
 
     if (attachments && attachments.length > 0) {
@@ -454,26 +408,98 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     }
 
     try {
-      const sendMsgRes = await axiosInstance.post("/messages/send", formData);
-      get().updateMessageOnSendComplete({
-        message: sendMsgRes.data,
-        conversationId: getConvo._id,
-        tempId: msgTempId,
-      });
+      const sendMsgRes = await axiosInstance.post<{ message: IMessage, newConversation?: IConversation }>("/messages/send", formData);
+
+      const { message, newConversation } = sendMsgRes.data;
+
+      get().handleSentMessageResponse(message, conversationId, msgTempId, newConversation);
+
     } catch (error) {
-      console.log("Message Send Failed Show UI");
-      return;
+      get().updateMessageStatus({
+        status: "failed",
+        conversationId,
+        tempId: conversationId,
+      });
     }
+  },
+
+  handleSentMessageResponse: (message, tempConversationId, msgTempId, newConversation) => {
+    set((s) => {
+      // CASE 1 - existing conversation, just swap the temp message in-place
+      if (!newConversation) {
+        const messages = s.storedMessages[message.conversationId] || [];
+        const msgIndex = messages.findIndex(
+          (msg) => msg._id === msgTempId || msg.tempId === msgTempId,
+        );
+
+        if (msgIndex === -1) return s;
+
+        const updatedMessages = [...messages];
+        updatedMessages[msgIndex] = message;
+
+        return {
+          storedMessages: {
+            ...s.storedMessages,
+            [message.conversationId]: updatedMessages,
+          },
+        };
+      }
+
+      // CASE 2 - new conversation was created
+      // Add the new conversation to the list
+      const updatedConversations = [
+        ...s.conversations.filter((p) => p._id !== newConversation._id),
+        newConversation,
+      ].sort((a, b) => {
+        const dateA = new Date(a.updateAt || a.createdAt).getTime();
+        const dateB = new Date(b.updateAt || b.createdAt).getTime();
+        return dateB - dateA;
+      });
+
+      // Handle messages under the new conversationId
+      const existingMessages = s.storedMessages[message.conversationId];
+      let updatedMessages: IMessage[];
+
+      if (existingMessages && existingMessages.length > 0) {
+        // Swap the temp message in-place
+        const msgIndex = existingMessages.findIndex(
+          (msg) => msg._id === msgTempId || msg.tempId === msgTempId,
+        );
+
+        if (msgIndex !== -1) {
+          updatedMessages = [...existingMessages];
+          updatedMessages[msgIndex] = message;
+        } else {
+          updatedMessages = [...existingMessages, message];
+        }
+      } else {
+        // No existing messages, just add it
+        updatedMessages = [message];
+      }
+
+      // If the user is currently viewing the temp conversation, update selectedConversation
+      const isViewingTempConvo =
+        s.selectedConversation?._id === tempConversationId;
+
+      return {
+        conversations: updatedConversations,
+        storedMessages: {
+          ...s.storedMessages,
+          [message.conversationId]: updatedMessages,
+        },
+        ...(isViewingTempConvo && {
+          selectedConversation: newConversation,
+        }),
+      };
+    });
   },
 
   addMessageToState(message, conversationId) {
     set((s) => {
-      const storeMessages = s.storedMessages[conversationId];
-      if (!storeMessages?.length) return s;
+      const storeMessages = s.storedMessages[conversationId] ?? [];
 
       const msgIndex = storeMessages.findIndex((m) => m._id === message._id);
 
-      // message doesn't exist, add it
       if (msgIndex === -1)
         return {
           storedMessages: {
@@ -482,58 +508,8 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
           },
         };
 
-      // message exists, replace it
       const updatedMessages = [...storeMessages];
       updatedMessages[msgIndex] = message;
-
-      return {
-        storedMessages: {
-          ...s.storedMessages,
-          [conversationId]: updatedMessages,
-        },
-      };
-    });
-  },
-
-  updatedMessageOnConvoCreate: ({
-    message,
-    tempConvoId,
-    receivedConvoData,
-  }) => {
-    set((s) => {
-      const { [tempConvoId]: _, ...remainingMessages } = s.storedMessages;
-      const storeMessages = remainingMessages[receivedConvoData._id] || [];
-
-      const msgIndex = storeMessages.findIndex((m) => m._id === message._id);
-
-      const updatedMessages = [...storeMessages];
-      if (msgIndex === -1) {
-        updatedMessages.push(message);
-      } else {
-        updatedMessages[msgIndex] = message;
-      }
-
-      return {
-        storedMessages: {
-          ...remainingMessages,
-          [receivedConvoData._id]: updatedMessages,
-        },
-      };
-    });
-  },
-
-  updateMessageOnSendComplete: ({ message, conversationId, tempId }) => {
-    set((s) => {
-      const messages = s.storedMessages[conversationId] || [];
-
-      const messageIndex = messages.findIndex(
-        (msg) => msg._id === tempId || msg.tempId === tempId,
-      );
-
-      if (messageIndex === -1) return s;
-
-      const updatedMessages = [...messages];
-      updatedMessages[messageIndex] = message;
 
       return {
         storedMessages: {
@@ -566,12 +542,9 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     };
 
     const p2pInitiatedReply = get().p2pInitiatedReply;
-
     const replyTo = p2pInitiatedReply[conversationId];
 
-    const isReplied = !!replyTo;
-
-    if (isReplied && replyTo) {
+    if (replyTo) {
       const messages = get().storedMessages[conversationId];
       const message = messages.find((m) => m._id === replyTo);
 
@@ -588,66 +561,27 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
         p2pInitiatedReply: getInitiatedReply,
       };
     });
-    // Update Message To State.
+
     get().addMessageToState(newMessage, conversationId);
 
-    let getConvo = get().conversations.find((p) => p._id === conversationId);
-    /*---------------- */
+    try {
+      const sendMsgRes = await axiosInstance.post<{ message: IMessage; newConversation?: IConversation }>("/messages/send", {
+        receiverId,
+        conversationId,
+        connectionId,
+        type: "gif",
+        gif: gifData,
+        ...(replyTo && { replyTo }),
+      });
 
-    // Settle Conversation Wall by Getting and updating state
-    if (!getConvo || getConvo.isTemp) {
-      try {
-        const convoGetRes = await axiosInstance.post<IConversation>(
-          "/conversations/create",
-          {
-            connectionId,
-          },
-        );
-
-        getConvo = convoGetRes.data;
-
-        set((s) => ({
-          selectedConversation:
-            s.selectedConversation?._id === conversationId
-              ? convoGetRes.data
-              : s.selectedConversation,
-        }));
-      } catch (error) {
-        // Show a UI and force user to refresh
-        console.log("Failed to retrieve convo Data. Something Went Wrong");
-        get().updateMessageStatus({
-          status: "failed",
-          conversationId,
-          tempId: msgTempId,
-        });
-      }
-    }
-    if (!getConvo) {
+      const { message, newConversation } = sendMsgRes.data;
+      get().handleSentMessageResponse(message, conversationId, msgTempId, newConversation);
+    } catch (error) {
       get().updateMessageStatus({
         status: "failed",
         conversationId,
         tempId: msgTempId,
       });
-      return;
-    }
-
-    const { replyTo: _, ...rest } = newMessage;
-
-    const payload = {
-      ...rest,
-      replyTo,
-    };
-
-    try {
-      const sendMsgRes = await axiosInstance.post("/messages/send", payload);
-      get().updateMessageOnSendComplete({
-        message: sendMsgRes.data,
-        conversationId: getConvo._id,
-        tempId: msgTempId,
-      });
-    } catch (error) {
-      console.log("Message Send Failed Show UI");
-      return;
     }
   },
   conversationMessagesFetchHistory: [],
@@ -773,13 +707,17 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
       set((state) => {
         const currentMessages = state.storedMessages[convoId] || [];
         const revertedMessages = [...currentMessages];
-        const currentMessage = revertedMessages.find(msg => msg._id === message._id);
-        
+        const currentMessage = revertedMessages.find(
+          (msg) => msg._id === message._id,
+        );
+
         if (currentMessage) {
-          const messageIndex = revertedMessages.findIndex(msg => msg._id === message._id);
+          const messageIndex = revertedMessages.findIndex(
+            (msg) => msg._id === message._id,
+          );
           revertedMessages[messageIndex] = message;
         }
-        
+
         return {
           storedMessages: {
             ...state.storedMessages,
