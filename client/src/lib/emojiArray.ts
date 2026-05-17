@@ -419,3 +419,8 @@ export type { EmojiItem, EmojiCategory };
 
 
 export default emojiArray;
+
+
+
+
+

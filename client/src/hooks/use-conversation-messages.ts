@@ -1,5 +1,5 @@
-import userChatStore from "@/store/user-chat-store";
-import type { IMessage } from "@/types/schema";
+import userChatStore from "@/core/store/user-chat-store";
+import type { IMessage } from "@/core/types/schema";
 import { useShallow } from "zustand/shallow";
 
 const EMPTY_MESSAGES: IMessage[] = [];
@@ -14,3 +14,8 @@ const useConversationMessages = (conversationId?: string) => {
 };
 
 export default useConversationMessages;
+
+
+
+
+

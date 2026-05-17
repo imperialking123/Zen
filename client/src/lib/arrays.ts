@@ -26,3 +26,8 @@ export const supportedLanguages = [
   { code: "no", lang: "Norwegian" },
   { code: "lt", lang: "Lithuanian" },
 ];
+
+
+
+
+
