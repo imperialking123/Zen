@@ -3,30 +3,30 @@ import "./App.css";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
 
-import AuthContainer from "./pages/auth/auth-container";
-import LoginContainer from "./pages/auth/login/loginContainer";
-import SignUpContainer from "./pages/auth/signup/signUpContainer";
-import AppContainer from "./app/app-container";
-import userAuthStore from "./store/user-auth-store";
-import { handleCheckAuth } from "./functions/authFunction";
-import HomePageContainer from "./pages/home-page/home-page-container";
-import ChatsContainer from "./app/chat/chat-container";
-import MomentsContainer from "./app/moment/momments-container";
-import ConnectionsContainer from "./app/connections/connections-container";
-import SpacesContainer from "./app/spaces/spaces-container";
+import AuthContainer from "@/features/auth/auth-container";
+import LoginContainer from "@/features/auth/login/LoginContainer";
+import SignUpContainer from "@/features/auth/signup/SignUpContainer";
+import AppContainer from "@/layouts/AppContainer";
+import userAuthStore from "@/core/store/user-auth-store";
+import { handleCheckAuth } from "@/core/utils/authFunction";
+import HomePageContainer from "@/pages/home/HomePage";
+import ChatsContainer from "@/features/chat/chat-container";
+import MomentsContainer from "@/features/moments/momments-container";
+import ConnectionsContainer from "@/features/connections/connections-container";
+import SpacesContainer from "@/features/spaces/spaces-container";
 import {
   handleEventAdd,
   handleEventRemove,
   handleEventUpdate,
-} from "./utils/socket-listener/socket-handler";
+} from "@/core/socket/socket-handler";
 
 import MessageContainer, {
   NoConversationSelectedUI,
-} from "./app/chat/message/message-container";
-import RouteNotFound from "./app/components/ui/not-found";
-import { handleSyncAdd, handleSyncRemove, handleSyncUpdate } from "./utils/socket-listener/sync/sync";
+} from "@/features/chat/message/message-container";
+import RouteNotFound from "@/components/ui/not-found";
+import { handleSyncAdd, handleSyncRemove, handleSyncUpdate } from "@/core/socket/sync/sync";
 
-const LoadingAppUI = lazy(() => import("./app/loading-app-container"));
+const LoadingAppUI = lazy(() => import("@/layouts/LoadingAppContainer"));
 
 const App = () => {
   const authUser = userAuthStore((state) => state.authUser);
@@ -118,3 +118,4 @@ const App = () => {
 };
 
 export default App;
+

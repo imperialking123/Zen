@@ -1,4 +1,4 @@
-import userChatStore from "@/store/user-chat-store"
+import userChatStore from "@/core/store/user-chat-store"
 
 type useTextMessageT = {
     messageId: string;
@@ -23,4 +23,9 @@ const useTextMessage = (props: useTextMessageT) => {
 }
 
 export default useTextMessage
+
+
+
+
+
 

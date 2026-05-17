@@ -1,4 +1,4 @@
-import UserFavouriteStore from "@/store/user-favourite-store"
+import UserFavouriteStore from "@/core/store/user-favourite-store"
 
 
 const useGif = (gifId: string) => {
@@ -13,3 +13,7 @@ const useGif = (gifId: string) => {
 }
 
 export default useGif
+
+
+
+
