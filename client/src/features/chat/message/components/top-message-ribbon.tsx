@@ -13,15 +13,15 @@ import { Tooltip, type TooltipProps } from "@/components/ui/tooltip";
 type MessageTopRibbonT = {
   otherUser: IUser;
   handleUnSelectConversation: () => void;
-  onToggleUserProfileSidebar: () => void;
-  isUserProfileSidebarOpen: Boolean;
+  onToggleSidePanel: () => void;
+  isSidePanelOpen: Boolean;
 };
 
 const MessageTopRibbon = ({
   otherUser,
   handleUnSelectConversation,
-  onToggleUserProfileSidebar,
-  isUserProfileSidebarOpen,
+  onToggleSidePanel,
+  isSidePanelOpen,
 }: MessageTopRibbonT) => {
   const { t } = useTranslation(["chat"]);
 
@@ -97,7 +97,7 @@ const MessageTopRibbon = ({
 
         <>
           <input
-            onChange={onToggleUserProfileSidebar}
+            onChange={onToggleSidePanel}
             type="checkbox"
             id="profile-toggle"
             className="profile-toggle-input"
@@ -107,7 +107,7 @@ const MessageTopRibbon = ({
             <Tooltip
               {...tooltipProps}
               content={
-                isUserProfileSidebarOpen
+                isSidePanelOpen
                   ? messageTopRibbon.hideUserProfile
                   : messageTopRibbon.showUserProfile
               }

@@ -11,6 +11,7 @@ import { getMessages } from "@/core/utils/chatFunctions";
 import MessageInputUI from "@/shared/message/message-input-ui";
 import { useNavigate, useParams } from "react-router-dom";
 import userChatStore from "@/core/store/user-chat-store";
+import ChatSidePanel, { type ChatSidePanelUIType } from "./components/chat-side-panel";
 
 export const NoConversationSelectedUI = () => {
   return (
@@ -69,7 +70,8 @@ const MessageContainer = () => {
   }, [id, navigate]);
 
 
-  const [isUserProfileSidebarOpen, setIsUserProfileSidebarOpen] = useState<boolean | "default">("default")
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState<boolean | "default">("default")
+  const [sidePanelUI, setSidePanelUI] = useState<ChatSidePanelUIType>("profile");
 
 
   if (!selectedConversation) {
@@ -88,83 +90,32 @@ const MessageContainer = () => {
     });
   };
 
-
-
   return (
     <Flex direction="column" className="message-container" maxW="full" minW="full" minH="full" maxH="full">
 
-
-
-
       <MessageTopRibbon
-        isUserProfileSidebarOpen={Boolean(isUserProfileSidebarOpen)}
+        isSidePanelOpen={Boolean(isSidePanelOpen)}
         handleUnSelectConversation={handleUnSelectConversation}
         otherUser={selectedConversation?.otherUser}
-        onToggleUserProfileSidebar={() => setIsUserProfileSidebarOpen(!isUserProfileSidebarOpen)}
+        onToggleSidePanel={() => setIsSidePanelOpen(!isSidePanelOpen)}
       />
       <Flex gap="3px" h="calc(100% - 55px)" >
         <Flex w={{
           base: "full",
-          lg: isUserProfileSidebarOpen ? "65%" : "full"
+          lg: isSidePanelOpen ? "60%" : "full"
 
         }} direction="column">
           <MessagesWrapper />
           <MessageInputUI inputPlaceHolder={messageInputPlaceholder} />
         </Flex>
 
-        <Flex
-          display={{
-            base: "flex",
-            md: "none",
-            lg: isUserProfileSidebarOpen ? "flex" : "none"
-          }}
-          borderLeft={{
-            base: "none",
-            lg: "1px solid var(--chakra-colors-bg-emphasized)"
-          }}
-          position={{
-            base: "fixed",
-            md: "static",
-            lg: "static"
-          }}
-          inset={{
-            base: "0",
-            md: "auto",
-            lg: "auto"
-          }}
-          flex={{
-            base: "none",
-            md: "0",
-            lg: "1"
-          }}
-          transform={{
-            base: isUserProfileSidebarOpen === "default" ? "translateX(100%)" : isUserProfileSidebarOpen ? "translateX(0)" : "translateX(100%)",
-            md: "none",
-            lg: "none"
-          }}
-          transition={{
-            base: "transform 0.3s ease-out",
-            md: "none",
-            lg: "none"
-          }}
-          zIndex={{
-            base: "overlay",
-            md: "auto",
-            lg: "auto"
-          }}
-          direction="column"
-        >
-
-        </Flex>
+        <ChatSidePanel
+          user={selectedConversation.otherUser}
+          isOpen={isSidePanelOpen}
+          uiToRender={sidePanelUI}
+          onClose={() => setIsSidePanelOpen(false)}
+        />
       </Flex>
-
-
-
-
-
-
-
-
     </Flex>
   );
 };
