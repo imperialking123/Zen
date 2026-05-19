@@ -126,5 +126,9 @@
     "showUserProfile": "Show user profile",
     "hideUserProfile": "Hide user profile"
   },
-  "searchText": "Search"
+  "searchText": "Search",
+  "ProfileView": {
+    "memberSinceText": "Member Since",
+    "bioText": "Bio"
+  }
 }

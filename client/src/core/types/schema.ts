@@ -6,6 +6,7 @@ export interface IUser {
   dob: Date | string;
   profile: {
     profilePic: string;
+    bio?: string;
   };
   isAdmin: boolean;
   createdAt: string;
@@ -165,8 +166,3 @@ export interface IConversation {
   showFor: string[];
   unreadCount?: Record<string, number>;
 }
-
-
-
-
-
