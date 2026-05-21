@@ -3,6 +3,7 @@ import Conversation from "../model/conversationModel.js";
 import User from "../model/userModel.js";
 import imageKitInstance from "../lib/kitUploader.js";
 import { emitPayloadToOtherSessions, emitPayLoadToUser } from "../lib/io.js";
+import mongoose from "mongoose";
 
 export const handleSendMessage = async (req, res) => {
   try {
@@ -137,30 +138,33 @@ export const handleSendMessage = async (req, res) => {
 
 export const handleGetAllMessages = async (req, res) => {
   try {
-    const { conversationId } = req.params || {};
+    const MESSAGE_FETCH_LIMIT = 75;
 
-    if (!conversationId || typeof conversationId !== "string") {
-      return res.status(400).json({ message: "INVALID_OR_NO_PARAMS" });
+
+    const beforeId = req.query.beforeId;
+    const conversation = req.conversation;
+
+    if (beforeId && !mongoose.Types.ObjectId.isValid(beforeId)) {
+      return res.status(400).json({ message: "INVALID_BEFORE_ID" });
     }
 
-    // //Alert Add Switch when space is defined
-    // const conversation = await Conversation.findOne({
-    //   _id: conversationId,
-    // }).populate("connectionId");
+    const query = beforeId
+      ? { conversationId: conversation._id, _id: { $lt: beforeId } }
+      : { conversationId: conversation._id };
 
-    // if (!conversation || !conversation.connectionId) {
-    //   return res.status(400).json({ message: "UNAUTHORIZED_FETCH" });
-    // }
-    const messages = await Message.find({ conversationId })
-      .sort({ createdAt: 1 })
-      .limit(100)
-      .populate("replyTo")
-      .populate("reactions.$*", "username");
+    const messages = await Message.find(query)
+      .sort({ createdAt: -1 })
+      .limit(MESSAGE_FETCH_LIMIT + 1)
+      .populate("replyTo");
 
-    return res.status(200).json(messages);
+    const hasMore = messages.length > MESSAGE_FETCH_LIMIT;
+    const trimmed = hasMore ? messages.slice(0, MESSAGE_FETCH_LIMIT) : messages;
+    const sorted = trimmed.reverse();
+
+    return res.status(200).json({ messages: sorted, hasMore });
   } catch (error) {
     console.log(
-      "Error on #handleGetAllMessage  #messageCotroller.js error -->",
+      "Error on #handleGetAllMessage #messageController.js error -->",
       error,
     );
     return res.status(500).json({ message: "SERVER_ERROR" });
