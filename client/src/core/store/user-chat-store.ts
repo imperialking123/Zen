@@ -112,6 +112,7 @@ type userChatStoreTypes = {
     convoId: string;
     persistToServer?: boolean;
   }) => Promise<void>;
+  fetchMoreMessagesTop: (convoId: string) => void;
 };
 
 const userChatStore = create<userChatStoreTypes>((set, get) => ({
@@ -725,6 +726,62 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
           },
         };
       });
+    }
+  },
+  fetchMoreMessagesTop: async (convoId) => {
+    set({ isGettingMessages: true });
+    try {
+      if (!convoId) return;
+
+      const getMessages = get().storedMessages[convoId] || [];
+      const firstMessage = getMessages[0];
+      if (!firstMessage) return;
+
+      const conversation = get().conversations.find((c) => c._id === convoId);
+      if (!conversation) return;
+
+      type GetMessageResponse = {
+        messages: IMessage[];
+        hasMore: boolean;
+      };
+
+      const { data } = await axiosInstance.get<GetMessageResponse>(
+        `/messages/get/all/${conversation.connectionId}`,
+        {
+          params: {
+            beforeId: firstMessage._id,
+          },
+        }
+      );
+
+      const { messages, hasMore } = data
+
+      if (messages.length > 0) {
+        set((state) => {
+          const messagesInState = state.storedMessages[convoId] || [];
+          return {
+            storedMessages: {
+              ...state.storedMessages,
+              [convoId]: [...messages, ...messagesInState],
+            },
+            hasMoreTop: {
+              ...state.hasMoreTop,
+              [convoId]: hasMore,
+            },
+          };
+        });
+      } else {
+        set({
+          hasMoreTop: {
+            ...get().hasMoreTop,
+            [convoId]: false,
+          },
+        });
+      }
+    } catch (error) {
+      console.log("Message Fetch Failed");
+    } finally {
+      set({ isGettingMessages: false });
     }
   },
 }));

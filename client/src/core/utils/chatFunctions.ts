@@ -87,27 +87,36 @@ export const getMessages = async (conversationId: string) => {
     const getMessagesFromStore =
       userChatStore.getState().storedMessages[conversationId];
 
-    if (getMessagesFromStore) {
+    if (getMessagesFromStore) return;
 
-      return;
+    const conversation = userChatStore.getState().conversations.find((c) => c._id === conversationId);
+
+    if (!conversation) return;
+
+    type GetMessageResponse = {
+      messages: IMessage[],
+      hasMore: boolean,
     }
-    const res = await axiosInstance.get(`/messages/get/all/${conversationId}`);
 
-    const resData: IMessage[] = res.data;
+    const res = await axiosInstance.get<GetMessageResponse>(`/messages/get/all/${conversation.connectionId}`)
+    const { messages, hasMore } = res.data;
 
     userChatStore.setState((state) => ({
       storedMessages: {
         ...state.storedMessages,
-        [conversationId]: resData,
+        [conversationId]: messages,
+      },
+      hasMoreTop: {
+        ...state.hasMoreTop,
+        [conversation._id]: hasMore
       },
       conversationMessagesFetchHistory: [
         ...state.conversationMessagesFetchHistory.filter(p => p !== conversationId),
         conversationId
-      ]
-
+      ],
     }));
   } catch (error) {
-    console.log("Request to get messages failed", error);
+    console.log("Message Fetch Failed")
   } finally {
     userChatStore.setState({ isGettingMessages: false });
   }
