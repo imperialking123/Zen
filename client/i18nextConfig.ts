@@ -14,7 +14,7 @@ i18next
     returnObjects: true,
     interpolation: { escapeValue: false },
     backend: { loadPath: "/locale/{{lng}}/{{ns}}.json" },
-    ns: ["translation", "auth", "connection"],
+    ns: ["translation", "auth", "connection", "notification"],
     defaultNS: "translation",
     detection: {
       convertDetectedLanguage: (lng) => {
