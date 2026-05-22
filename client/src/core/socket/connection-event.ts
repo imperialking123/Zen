@@ -1,5 +1,4 @@
-import { notificationService } from "@/core/utils";
-
+import handleNotificationRequest from "@/core/notifications/notification-request-handler";
 import userPresenseStore from "@/core/store/user-presense-store";
 import userConnectionStore from "@/core/store/user-connections-store";
 import type { SocketPresenseEvent } from "@/core/types";
@@ -18,7 +17,10 @@ export const HANDLE_ADD_CONNECTION_PING = (args: connectionPingType | null) => {
     receivedConnectionPings: [...filteredConnections, args],
   });
 
-  notificationService.playConnection();
+  handleNotificationRequest({
+    type: "CONNECTION_PING",
+    pingData: args,
+  });
 };
 
 export const HANDLE_ADD_NEW_CONNECTION = (
