@@ -45,6 +45,7 @@ const ImageAttachment = ({
             overflow="hidden"
             pos="relative"
             className="group"
+            style={{ aspectRatio: "auto" }}
         >
             {!hasPreview && <>
                 {!isAlone && <Group opacity={0} pointerEvents="none" _groupHover={{
