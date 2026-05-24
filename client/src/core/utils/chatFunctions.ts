@@ -84,10 +84,10 @@ export const getMessages = async (conversationId: string) => {
   try {
     if (!conversationId) return;
 
-    const getMessagesFromStore =
-      userChatStore.getState().storedMessages[conversationId];
+    const alreadyFetched =
+      userChatStore.getState().conversationMessagesFetchHistory.includes(conversationId);
 
-    if (getMessagesFromStore) return;
+    if (alreadyFetched) return;
 
     const conversation = userChatStore.getState().conversations.find((c) => c._id === conversationId);
 
