@@ -12,11 +12,7 @@ interface P2PMessagingActionBarProps {
 
 const P2PMessagingActionBar = ({ event, onDismiss }: P2PMessagingActionBarProps) => {
   const isVisible = Boolean(event);
-
   const { t: translate } = useTranslation(["chat"])
-
-
-
   const getText = (): string => {
     if (event && event.type === WrapperCustomEventDetailType.NEW_MESSAGES_BOTTOM) {
       return translate("newMessagesBottom");
