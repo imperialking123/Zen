@@ -1,6 +1,6 @@
 import { Flex } from "@chakra-ui/react";
 import MessageStartUI from "./message-start-ui";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import {
   WRAPPER_CUSTOM_EVENT,
   WrapperCustomEventDetailType,
@@ -64,21 +64,21 @@ const MessagesWrapper = () => {
     }
   }, [isGettingMessages, displayedMessages.length]);
 
-  const dismissActionBar = useCallback(() => {
+  const dismissActionBar = () => {
     if (wrapperCustomEvent) {
       if (wrapperCustomEvent.type === "new-messages-bottom") {
         scrollMessageWrapperToBottom()
       }
     }
     setWrapperCustomEvent(false);
-  }, []);
+  };
 
-  const handleWrapperCustomEvent = useCallback((event: Event) => {
+  const handleWrapperCustomEvent = (event: Event) => {
     const { detail } = event as CustomEvent<WrapperCustomEventDetail>;
     if (detail?.type === WrapperCustomEventDetailType.NEW_MESSAGES_BOTTOM) {
       setWrapperCustomEvent(detail);
     }
-  }, []);
+  };
 
   useEffect(() => {
     const wrapper = wrapperRef.current;

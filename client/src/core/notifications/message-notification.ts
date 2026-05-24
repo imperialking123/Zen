@@ -33,10 +33,9 @@ export const handleMessageNotification = (message: IMessage) => {
 
   if (isSelectedConversation) {
     const wrapper = getMessageWrapperElement();
-
     if (!wrapper) return;
-
-    if (!isScrolledAwayFromBottom(wrapper)) {
+    const isScrolledAway = isScrolledAwayFromBottom(wrapper)
+    if (!isScrolledAway) {
       scrollMessageWrapperToBottom();
       return;
     }

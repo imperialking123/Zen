@@ -14,8 +14,12 @@ export const getMessageScrollAnchor = (): HTMLElement | null =>
 export const isScrolledAwayFromBottom = (wrapper: HTMLElement): boolean =>
   wrapper.scrollHeight - wrapper.scrollTop - wrapper.clientHeight >= SCROLL_AWAY_FROM_BOTTOM_THRESHOLD_PX;
 
-export const scrollMessageWrapperToBottom = (behavior: ScrollBehavior = "instant"): void => {
-  document.getElementById(MESSAGE_SCROLL_REF_ID)?.scrollIntoView({ behavior });
+export const scrollMessageWrapperToBottom = (): void => {
+  requestAnimationFrame(() => {
+    const wrapper = getMessageWrapperElement();
+    if (!wrapper) return;
+    wrapper.scrollTop = wrapper.scrollHeight;
+  });
 };
 
 export const axiosInstance = axios.create({

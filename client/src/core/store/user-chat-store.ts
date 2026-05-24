@@ -5,7 +5,7 @@ import type {
   IConversation,
   IMessage,
 } from "@/core/types/schema";
-import { axiosInstance } from "@/core/utils";
+import { axiosInstance, scrollMessageWrapperToBottom } from "@/core/utils";
 
 type sendP2PDefaultMessageType = {
   textInput: string;
@@ -374,7 +374,8 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
         p2pInitiatedReply: getInitiatedReply,
       };
     });
-    get().addMessageToState(newMessage, conversationId);
+    void get().addMessageToState(newMessage, conversationId);
+    scrollMessageWrapperToBottom()
 
     let getConvo = get().conversations.find((p) => p._id === conversationId);
     /*---------------- */
