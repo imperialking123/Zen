@@ -116,8 +116,12 @@ function MessageGifRender({ gifData, disPlayGifFullScreen, }: GifRendererProps) 
         onClick={disPlayGifFullScreen}
         // onDoubleClick={handleToggleShowFavourite} 
         pos="relative"
-        width="fit-content"
-        height="fit-content" overflow="hidden"
+        width={width ? `${width}px` : "auto"}
+        maxW="full"
+        maxH="300px"
+        style={{ aspectRatio: width && height ? `${width} / ${height}` : "auto" }}
+        overflow="hidden"
+        borderRadius="6px"
       >
         {!gifDetails.isError && (
           <video
@@ -129,8 +133,8 @@ function MessageGifRender({ gifData, disPlayGifFullScreen, }: GifRendererProps) 
             onLoadedData={() => setGifDetails(e => ({ ...e, isLoading: false }))}
             src={preview ? full : full}
             style={{
-              width: width ? `${width}px` : "auto",
-              height: height ? `${height}px` : "auto",
+              width: "100%",
+              height: "100%",
               maxHeight: "300px",
               objectFit: "fill",
               borderRadius: "6px",
@@ -147,9 +151,7 @@ function MessageGifRender({ gifData, disPlayGifFullScreen, }: GifRendererProps) 
         )}
 
         {gifDetails.isLoading && (
-          <Flex rounded="sm" w="200px" h="200px" p="5px" className="isLoading" >
-
-          </Flex>
+          <Flex rounded="sm" w="full" h="full" className="discord-shimmer" />
         )}
 
 

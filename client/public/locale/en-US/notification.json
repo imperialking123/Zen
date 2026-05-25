@@ -1,0 +1,18 @@
+{
+  "appName": "ZEN",
+  "connectionPing": {
+    "unknownSenderName": "Someone",
+    "followRequestBody": "{{senderName}} sent you a follow request.",
+    "followRequestBodyWithUsername": "{{senderName}} (@{{username}}) sent you a follow request."
+  },
+  "message": {
+    "gif": "GIF",
+    "image": "Image",
+    "newMessage": "New message"
+  },
+  "actionBar": {
+    "newMessagesBottom_one": "{{preview}}",
+    "newMessagesBottom_other": "{{count}} new messages below",
+    "scrollToBottom": "Jump to latest"
+  }
+}

@@ -1,23 +1,44 @@
 import axios from "axios";
 import { encode } from "blurhash";
 
+export const MESSAGE_WRAPPER_ID = "message-wrapper";
+export const MESSAGE_SCROLL_REF_ID = "message-scroll-ref";
+export const SCROLL_AWAY_FROM_BOTTOM_THRESHOLD_PX = 25;
+
+export const getMessageWrapperElement = (): HTMLElement | null =>
+  document.getElementById(MESSAGE_WRAPPER_ID);
+
+export const getMessageScrollAnchor = (): HTMLElement | null =>
+  document.getElementById(MESSAGE_SCROLL_REF_ID);
+
+export const isScrolledAwayFromBottom = (wrapper: HTMLElement): boolean =>
+  wrapper.scrollHeight - wrapper.scrollTop - wrapper.clientHeight >= SCROLL_AWAY_FROM_BOTTOM_THRESHOLD_PX;
+
+export const scrollMessageWrapperToBottom = (): void => {
+  requestAnimationFrame(() => {
+    const wrapper = getMessageWrapperElement();
+    if (!wrapper) return;
+    wrapper.scrollTop = wrapper.scrollHeight;
+  });
+};
+
 export const axiosInstance = axios.create({
   withCredentials: true,
   baseURL: `${import.meta.env.VITE_BACKEND_URL}/api`,
 });
 
 class NotificationAudio {
-  message = new Audio("/sounds/message.mp3");
-  connection = new Audio("/sounds/newconnection.mp3");
+  private message = new Audio("/sounds/new-message.mp3");
+  private connection = new Audio("/sounds/newconnection.mp3");
 
   playMessage() {
     this.message.currentTime = 0;
-    this.message.play().catch(() => {});
+    this.message.play().catch(() => { });
   }
 
   playConnection() {
     this.connection.currentTime = 0;
-    this.connection.play().catch(() => {});
+    this.connection.play().catch(() => { });
   }
 }
 

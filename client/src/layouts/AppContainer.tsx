@@ -38,12 +38,14 @@ const AppContainer = () => {
   const socket = userAuthStore((state) => state.socket);
 
   const handleOnIdle = () => {
+    userAuthStore.setState({ isIdle: true })
     if (socket) {
       socket.emit("idlePresenseChange", "idle");
     }
   };
 
   const handleOnActive = () => {
+    userAuthStore.setState({ isIdle: false })
     if (socket) {
       socket.emit("idlePresenseChange", "online");
     }

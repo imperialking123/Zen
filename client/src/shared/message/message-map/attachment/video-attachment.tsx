@@ -24,7 +24,8 @@ const VideoAttachment = (props: {
         isLoadError: false,
     });
     const { attachment: att, displayAttachmentFullscreen: displayAtt } = props
-    const { filePath, mimeType, name } = att
+    const { filePath, mimeType, name, width, height } = att
+    const aspectRatio = width && height ? `${width} / ${height}` : "auto";
 
     const hasPreview = Boolean(att["previewUrl"])
     const src = getSource(att.filePath ?? "", att.previewUrl, att.mimeType)
@@ -58,7 +59,7 @@ const VideoAttachment = (props: {
 
 
     return (
-        <Flex onClick={handlePlayBtnClick} className="group" overflow="hidden" rounded="5px" pos="relative">
+        <Flex onClick={handlePlayBtnClick} className="group" overflow="hidden" rounded="5px" pos="relative" style={{ aspectRatio }}>
 
             {hasPreview && <BlurhashCanvas hash={att.blurHash} />}
 

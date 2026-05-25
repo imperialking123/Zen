@@ -60,9 +60,9 @@ const MessageContainer = () => {
     if (getConversation) {
       setSelectedConversation(getConversation);
       userChatStore.setState({ selectedConversation: getConversation });
+      document.title = ` • Zen | @${getConversation.otherUser.username}`;
       if (!getConversation.isTemp) {
         getMessages(getConversation._id);
-        document.title = ` • Zen | @${getConversation.otherUser.username}`;
       }
     } else {
       navigate("/app/chat", { replace: true });

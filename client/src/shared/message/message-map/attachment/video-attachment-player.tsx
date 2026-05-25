@@ -20,7 +20,8 @@ type VideoAttachmentPlayerPropsT = {
 const VideoAttachmentPlayer = (props: VideoAttachmentPlayerPropsT) => {
     const { attachment: 
     att } = props
-    const { filePath, mimeType, name } = att
+    const { filePath, mimeType, name, width, height } = att
+    const aspectRatio = width && height ? `${width} / ${height}` : "auto";
 
     const [mediaState, setMediaState] = useState({
         isLoaded: false,
@@ -181,6 +182,7 @@ const VideoAttachmentPlayer = (props: VideoAttachmentPlayerPropsT) => {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onMouseMove={handleMouseMove}
+            style={{ aspectRatio }}
         >
 
 

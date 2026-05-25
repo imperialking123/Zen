@@ -1,3 +1,4 @@
+import handleNotificationRequest from "@/core/notifications/notification-request-handler";
 import { axiosInstance } from "@/core/utils";
 import userChatStore from "@/core/store/user-chat-store";
 import userPresenceStore from "@/core/store/user-presense-store";
@@ -59,6 +60,8 @@ export const HANDLE_RECEIVE_NEW_MESSAGE = async (message: IMessage, newConversat
             },
           };
         });
+
+        handleNotificationRequest({ type: "MESSAGE", message });
         return;
       }
     }
@@ -109,6 +112,7 @@ export const HANDLE_RECEIVE_NEW_MESSAGE = async (message: IMessage, newConversat
           };
         });
 
+        handleNotificationRequest({ type: "MESSAGE", message });
         return;
       } else {
         userChatStore.setState((state) => {
@@ -173,6 +177,8 @@ export const HANDLE_RECEIVE_NEW_MESSAGE = async (message: IMessage, newConversat
         });
       }
     }
+
+    handleNotificationRequest({ type: "MESSAGE", message });
   } catch (error) {
     console.error(
       "Could not receive message:",

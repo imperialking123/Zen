@@ -3,9 +3,9 @@ import Conversation from "../model/conversationModel.js";
 
 const EnsureConversationAccess = async (req, res, next) => {
   try {
-    const { connectionId } = req.body ?? {};
+    const { connectionId } = req?.body || req?.params || {};
 
-    const userId = req.user?._id;
+    const userId = req.user?._id; 
 
     if (!connectionId) {
       return res.status(400).json({ message: "CONNECTION_ID_REQUIRED" });

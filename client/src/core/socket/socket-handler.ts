@@ -103,7 +103,7 @@ export const handleEventAdd = (args: ADD_EVENT_CASES_TYPES) => {
       break;
 
     case "RECEIVE_MESSAGE":
-      HANDLE_RECEIVE_NEW_MESSAGE(args.message, args.newConversation);
+      void HANDLE_RECEIVE_NEW_MESSAGE(args.message, args.newConversation);
       break;
   }
 };

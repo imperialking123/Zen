@@ -130,5 +130,6 @@
   "ProfileView": {
     "memberSinceText": "Member Since",
     "bioText": "Bio"
-  }
+  },
+  "newMessagesBottom": "New messages below"
 }

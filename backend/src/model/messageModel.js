@@ -1,4 +1,4 @@
-import mongoose, { Types } from "mongoose";
+import mongoose from "mongoose";
 
 /**
  * Attachment Schema - represents file attachments in messages

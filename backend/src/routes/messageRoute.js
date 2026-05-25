@@ -60,8 +60,9 @@ const limits = {
 const upload = multer({ storage, fileFilter, limits });
 
 messageRoute.get(
-  "/get/all/:conversationId",
+  "/get/all/:connectionId",
   ProtectRoute,
+  EnsureConversationAccess,
   handleGetAllMessages,
 );
 

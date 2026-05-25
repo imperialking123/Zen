@@ -251,6 +251,8 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
         justifyContent="center"
         alignItems="center"
         h={message.isReplied ? "75px" : showSimpleStyle ? "25px" : "50px"}
+        flexShrink={0}
+        w={{ base: "16%", lg: "65px" }}
         minW={{ base: "16%", lg: "65px" }}
         maxW={{ base: "16%", lg: "65px" }}
         direction="column"
@@ -298,10 +300,10 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
       </Flex>
 
       <Flex
-
         py={showSimpleStyle ? "2px" : "2px" }
         flexDir="column"
-        flex={1}
+        minW={0}
+        w={{ base: "calc(100% - 16%)", lg: "calc(100% - 65px)" }}
       >
         {message.isReplied && (
           <P2PMessageReplyUI replyToMessage={message.replyTo} />

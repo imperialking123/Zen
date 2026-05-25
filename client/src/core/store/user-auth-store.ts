@@ -10,6 +10,7 @@ type userAuthStore = {
   isCheckingUsername: boolean;
   socket: Socket | null;
   isPoolingReconnection: boolean;
+  isIdle?: boolean,
 };
 
 const userAuthStore = create<userAuthStore>(() => ({
