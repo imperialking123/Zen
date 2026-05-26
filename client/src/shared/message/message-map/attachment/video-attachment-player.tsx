@@ -7,7 +7,7 @@ import MediaLoadErrorUI from "../../media-load-error-ui";
 import BlurhashCanvas from "@/shared/blur-hash-render";
 import { HiSpeakerWave, HiSpeakerXMark } from "react-icons/hi2";
 import { RiFullscreenExitLine, RiFullscreenFill } from "react-icons/ri";
-import { generateCDN_URL } from "@/core/utils/generalFunctions";
+import { generateCDN_URL } from "@/core/utils/general-functions";
 import { TfiDownload } from "react-icons/tfi";
 
 

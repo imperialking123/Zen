@@ -17,7 +17,7 @@ import { BeatLoader } from "react-spinners";
 import { useTranslation } from "react-i18next";
 import userAuthStore from "@/core/store/user-auth-store";
 import { useColorModeValue } from "@/components/ui/color-mode";
-import { handleCheckAuth, handleLogin } from "@/core/utils/authFunction";
+import { handleCheckAuth, handleLogin } from "@/core/utils/auth-function";
 import AuthLogo from "@/components/ui/logo-export";
 
 

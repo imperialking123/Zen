@@ -11,7 +11,7 @@ import {
   handleCheckAuth,
   handleCheckUsername,
   handleSignup,
-} from "@/core/utils/authFunction";
+} from "@/core/utils/auth-function";
 
 import { useTranslation } from "react-i18next";
 import AuthLogo from "@/components/ui/logo-export";

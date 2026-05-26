@@ -1,18 +1,19 @@
 import { Flex, Heading, IconButton, Input, InputGroup } from "@chakra-ui/react";
 import { LuPlus } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
 import userChatStore from "@/core/store/user-chat-store";
 import CreateDmUI from "./create-dm";
 import ConversationItem from "./conversation-item";
+import userAuthStore from "@/core/store/user-auth-store";
 
 const ChatSideBar = () => {
   const { t: translate } = useTranslation(["chat"]);
 
-  const conversations = userChatStore((state) => state.conversations);
-  const selectedConversation = userChatStore(
-    (state) => state.selectedConversation,
-  );
+  const { id: activeConversationId } = useParams<{ id: string }>();
 
+  const conversations = userChatStore((state) => state.conversations);
+  const authUser = userAuthStore(s => s.authUser)
   const chatTitle = translate("ChatTitle");
   const newChatText = translate("NewChat");
   const searchText = translate("SearchChats");
@@ -28,8 +29,6 @@ const ChatSideBar = () => {
 
   const noConnectionsText = translate("noConnectionsText")
 
-
-
   return (
     <Flex
       borderRight={{ base: "none", lg: "1px solid ", md: "1px solid" }}
@@ -44,8 +43,6 @@ const ChatSideBar = () => {
     >
       {/*Top Bar */}
       <Flex
-        minH={{ lg: "15%" }}
-        maxH={{ lg: "15%" }}
         alignItems="center"
         w="full"
         direction="column"
@@ -98,6 +95,7 @@ const ChatSideBar = () => {
       {/*Top Bar */}
 
       <Flex
+
         css={{
           "&::-webkit-scrollbar": {
             width: "5px",
@@ -115,19 +113,17 @@ const ChatSideBar = () => {
         p="10px"
         direction="column"
         w="full"
-        maxH={{ lg: "85%" }}
-        minH={{ lg: "85%" }}
+        flex={1}
       >
         {conversations
           .filter((p) => !p.isTemp)
           .map((convo) => {
-            const isSelected = selectedConversation?._id === convo._id;
+            const isSelected = activeConversationId === convo._id;
             return (
               <ConversationItem
+                currentUserId={authUser?._id ?? ""}
                 convoItem={convo}
-                key={
-                  convo._id || `temp-${convo.otherUser._id}-${convo.createdAt}`
-                }
+                key={convo._id || `temp-${convo.otherUser._id}-${convo.createdAt}`}
                 isSelected={isSelected}
               />
             );

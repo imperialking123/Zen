@@ -159,15 +159,15 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     const updatedMessages =
       messages.length > 0
         ? messages.map((msg) => {
-          if (msg._id === tempId) {
-            return {
-              ...msg,
-              status,
-            };
-          } else {
-            return msg;
-          }
-        })
+            if (msg._id === tempId) {
+              return {
+                ...msg,
+                status,
+              };
+            } else {
+              return msg;
+            }
+          })
         : [];
 
     set((s) => {
@@ -219,15 +219,15 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     const updatedMessages =
       allMessages.length > 0
         ? allMessages
-          .filter((msg) => msg._id !== messageId) // Remove the message itself
-          .map((msg) => {
-            // Remove replyTo if it references the deleted message
-            if (msg.replyTo?._id === messageId) {
-              const { replyTo, ...messageWithoutReply } = msg;
-              return messageWithoutReply as IMessage;
-            }
-            return msg;
-          })
+            .filter((msg) => msg._id !== messageId) // Remove the message itself
+            .map((msg) => {
+              // Remove replyTo if it references the deleted message
+              if (msg.replyTo?._id === messageId) {
+                const { replyTo, ...messageWithoutReply } = msg;
+                return messageWithoutReply as IMessage;
+              }
+              return msg;
+            })
         : [];
     set((S) => {
       return {
@@ -304,6 +304,16 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
       };
     });
 
+    const messageEl = document.getElementById(`p2p-msg-item-id-${messageId}`);
+
+    if (messageEl) {
+      messageEl.scrollIntoView({
+        behavior: "instant",
+        block: "center",
+        inline: "nearest",
+      });
+    }
+
     if (persistToServer) {
       axiosInstance
         .patch("/messages/react", { messageId, conversationId, emoji })
@@ -375,11 +385,10 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
       };
     });
     void get().addMessageToState(newMessage, conversationId);
-    scrollMessageWrapperToBottom()
+    scrollMessageWrapperToBottom();
 
     let getConvo = get().conversations.find((p) => p._id === conversationId);
     /*---------------- */
-
 
     const formData = new FormData();
     formData.append("receiverId", newMessage.receiverId);
@@ -410,12 +419,19 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     }
 
     try {
-      const sendMsgRes = await axiosInstance.post<{ message: IMessage, newConversation?: IConversation }>("/messages/send", formData);
+      const sendMsgRes = await axiosInstance.post<{
+        message: IMessage;
+        newConversation?: IConversation;
+      }>("/messages/send", formData);
 
       const { message, newConversation } = sendMsgRes.data;
 
-      get().handleSentMessageResponse(message, conversationId, msgTempId, newConversation);
-
+      get().handleSentMessageResponse(
+        message,
+        conversationId,
+        msgTempId,
+        newConversation,
+      );
     } catch (error) {
       get().updateMessageStatus({
         status: "failed",
@@ -425,7 +441,12 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     }
   },
 
-  handleSentMessageResponse: (message, tempConversationId, msgTempId, newConversation) => {
+  handleSentMessageResponse: (
+    message,
+    tempConversationId,
+    msgTempId,
+    newConversation,
+  ) => {
     set((s) => {
       // CASE 1 - existing conversation, just swap the temp message in-place
       if (!newConversation) {
@@ -567,7 +588,10 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
     get().addMessageToState(newMessage, conversationId);
 
     try {
-      const sendMsgRes = await axiosInstance.post<{ message: IMessage; newConversation?: IConversation }>("/messages/send", {
+      const sendMsgRes = await axiosInstance.post<{
+        message: IMessage;
+        newConversation?: IConversation;
+      }>("/messages/send", {
         receiverId,
         conversationId,
         connectionId,
@@ -577,7 +601,12 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
       });
 
       const { message, newConversation } = sendMsgRes.data;
-      get().handleSentMessageResponse(message, conversationId, msgTempId, newConversation);
+      get().handleSentMessageResponse(
+        message,
+        conversationId,
+        msgTempId,
+        newConversation,
+      );
     } catch (error) {
       get().updateMessageStatus({
         status: "failed",
@@ -752,10 +781,10 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
           params: {
             beforeId: firstMessage._id,
           },
-        }
+        },
       );
 
-      const { messages, hasMore } = data
+      const { messages, hasMore } = data;
 
       if (messages.length > 0) {
         set((state) => {
@@ -788,8 +817,3 @@ const userChatStore = create<userChatStoreTypes>((set, get) => ({
 }));
 
 export default userChatStore;
-
-
-
-
-

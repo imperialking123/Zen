@@ -1,6 +1,6 @@
 import type { AxiosError } from "axios";
 import i8nextConfig from "../../../i18nextConfig";
-import { axiosInstance } from "../utils";
+import { axiosInstance } from ".";
 import userConnectionStore from "@/core/store/user-connections-store";
 import type { connectionPingType, ConnectionType } from "@/core/types/schema";
 import type { newConnectionPingResponse } from "../types";

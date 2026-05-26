@@ -6,9 +6,9 @@ import { Toaster } from "sonner";
 import AuthContainer from "@/features/auth/auth-container";
 import LoginContainer from "@/features/auth/login/LoginContainer";
 import SignUpContainer from "@/features/auth/signup/SignUpContainer";
-import AppContainer from "@/layouts/AppContainer";
+import AppContainer from "@/layouts/app-container";
 import userAuthStore from "@/core/store/user-auth-store";
-import { handleCheckAuth } from "@/core/utils/authFunction";
+import { handleCheckAuth } from "@/core/utils/auth-function";
 import HomePageContainer from "@/pages/home/HomePage";
 import ChatsContainer from "@/features/chat/chat-container";
 import MomentsContainer from "@/features/moments/momments-container";
@@ -26,7 +26,7 @@ import MessageContainer, {
 import RouteNotFound from "@/components/ui/not-found";
 import { handleSyncAdd, handleSyncRemove, handleSyncUpdate } from "@/core/socket/sync/sync";
 
-const LoadingAppUI = lazy(() => import("@/layouts/LoadingAppContainer"));
+const LoadingAppUI = lazy(() => import("@/layouts/loading-ui"));
 
 const App = () => {
   const authUser = userAuthStore((state) => state.authUser);

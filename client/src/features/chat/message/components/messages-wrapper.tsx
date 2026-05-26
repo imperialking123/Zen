@@ -16,6 +16,7 @@ import LoadingMessagesUI from "@/shared/message/loading-messages-ui";
 import useP2PMessaging from "@/hooks/use-p2p-messaging";
 import P2PMessagingActionBar from "./p2p-messaging-action-bar";
 import { isScrolledAwayFromBottom, scrollMessageWrapperToBottom } from "@/core/utils";
+import { clearConversationUnread } from "@/core/utils/chat-functions";
 
 const MessagesWrapper = () => {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -102,6 +103,20 @@ const MessagesWrapper = () => {
     wrapper.addEventListener("scroll", onScroll, { passive: true });
     return () => wrapper.removeEventListener("scroll", onScroll);
   }, [wrapperCustomEvent, dismissActionBar]);
+
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper || !selectedConversation) return;
+
+    const onScroll = () => {
+      if (!isScrolledAwayFromBottom(wrapper)) {
+        clearConversationUnread(selectedConversation._id);
+      }
+    };
+
+    wrapper.addEventListener("scroll", onScroll, { passive: true });
+    return () => wrapper.removeEventListener("scroll", onScroll);
+  }, [selectedConversation]);
 
   return (
     <Flex

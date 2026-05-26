@@ -3,7 +3,7 @@ import {
   formatDateSimpleStyle,
   formatMessageTimestamp,
   getEmojiUrl,
-} from "@/core/utils/chatFunctions";
+} from "@/core/utils/chat-functions";
 import { Text } from "@chakra-ui/react/text";
 import { Flex } from "@chakra-ui/react/flex";
 import { Avatar } from "@chakra-ui/react/avatar";
@@ -221,7 +221,7 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
     handleRemoveAttachment
   } = props;
 
-  
+
 
   const disPlayGifFullScreen = () => {
     void handleDisplayGifFullScreen(index);
@@ -246,7 +246,7 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
 
   const hasText = Boolean(message.type === "default" && message.text && message.text.trim.length > 0)
   return (
-    <div className="messageItem">
+    <div id={`p2p-msg-item-id-${message._id}`} className="messageItem">
       <Flex
         justifyContent="center"
         alignItems="center"
@@ -300,7 +300,7 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
       </Flex>
 
       <Flex
-        py={showSimpleStyle ? "2px" : "2px" }
+        py={showSimpleStyle ? "2px" : "2px"}
         flexDir="column"
         minW={0}
         w={{ base: "calc(100% - 16%)", lg: "calc(100% - 65px)" }}
@@ -337,7 +337,7 @@ const MessageItemContainer = (props: MessageItemContainerProps) => {
         )}
 
         {/* Message Contents */}
-        <Flex onContextMenu={handleContextMenu}  direction="column">
+        <Flex onContextMenu={handleContextMenu} direction="column">
           {message.type === "default" && message.text && (
             <MessageTextRenderer
               handleEditMesssage={props.handleEditMesssage}
@@ -401,7 +401,7 @@ export default memo(MessageItemContainer, (prevProps, nextProps) => {
     prevProps.message.updatedAt === nextProps.message.updatedAt &&
     prevProps.message.status === nextProps.message.status &&
     prevProps.message.reactions === nextProps.message.reactions;
-    prevProps.showSimpleStyle === nextProps.showSimpleStyle
+  prevProps.showSimpleStyle === nextProps.showSimpleStyle
 
   return isRerender;
 });

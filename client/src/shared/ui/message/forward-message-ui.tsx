@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 import { createDialog } from "../../create-dialog";
 import { FaSearch } from "react-icons/fa";
 
-import { getEmojiUrl } from "@/core/utils/chatFunctions";
+import { getEmojiUrl } from "@/core/utils/chat-functions";
 import { IoMdImage } from "react-icons/io";
 import { RiAttachment2 } from "react-icons/ri";
 import { HiGif } from "react-icons/hi2";

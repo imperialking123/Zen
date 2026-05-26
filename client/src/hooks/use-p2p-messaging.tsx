@@ -5,7 +5,7 @@ import userAuthStore from "@/core/store/user-auth-store";
 import useConversationMessages from "@/hooks/use-conversation-messages";
 import useP2PMessagePagination from "@/hooks/use-p2p-message-pagination";
 import { createDialog } from "@/shared/create-dialog";
-import { initiateReplyTo } from "@/core/utils/chatFunctions";
+import { initiateReplyTo } from "@/core/utils/chat-functions";
 
 import GifFullScreenPreviewUI from "@/shared/ui/gif-fullscreen-preview";
 import AttachmentFullScreenUI from "@/shared/ui/attachment-preview/attachment-fullscreen-renderer";
