@@ -75,6 +75,9 @@ export const handleSendMessage = async (req, res) => {
     }
 
     const newMessage = await Message.create({ ...messageObj });
+    await Conversation.findByIdAndUpdate(conversation._id, {
+      $inc: { [`unreadCount.${otherUserId}`]: 1 }
+    })
 
     const messageReturnObject = {
       ...newMessage.toObject(),

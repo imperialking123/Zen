@@ -1,6 +1,6 @@
 import { useColorModeValue } from "@/components/ui/color-mode";
 import userAuthStore from "@/core/store/user-auth-store";
-import { createNewConnectionPing } from "@/core/utils/connectionsFunctions";
+import { createNewConnectionPing } from "@/core/utils/connections-functions";
 import { Button, Field, Flex, Input, InputGroup, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";

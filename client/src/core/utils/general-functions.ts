@@ -11,8 +11,3 @@ export const generateCDN_URL = (
 
   return url;
 };
-
-
-
-
-

@@ -2,6 +2,7 @@ import http from "http";
 import express from "express";
 import { Server } from "socket.io";
 import User from "../model/userModel.js";
+import Conversation from "../model/conversationModel.js";
 import dotenv from "dotenv";
 import cookie from "cookie";
 import jwt from "jsonwebtoken";
@@ -336,6 +337,48 @@ export const getUserSocket = (userId) => {
   return user.socketId;
 };
 
+const handleClearConversationUnread = async (args, socket) => {
+  const { conversationId } = args;
+  const userId = socket.userId;
+  const sessionId = socket.sessionId;
+
+  if (!conversationId || !userId || !sessionId) {
+    console.log("Missing conversationId, userId, or sessionId in clearConversationUnread");
+    return;
+  }
+
+  try {
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      console.log("Conversation not found:", conversationId);
+      return;
+    }
+
+    await Conversation.findByIdAndUpdate(conversationId, {
+      $set: { [`unreadCount.${userId}`]: 0 }
+    });
+
+    const otherUserId = conversation.participants.find(
+      (p) => p.toString() !== userId.toString()
+    );
+
+    if (otherUserId) {
+      emitPayLoadToUser(otherUserId, "EVENT:ADD", {
+        type: "CONVERSATION_UNREAD_CLEARED",
+        conversationId,
+      });
+    }
+
+    emitPayloadToOtherSessions(userId, "EVENT:ADD", {
+      type: "CONVERSATION_UNREAD_CLEARED",
+      conversationId,
+    }, sessionId);
+
+    console.log(`Cleared unread count for user ${userId} in conversation ${conversationId}`);
+  } catch (error) {
+    console.error("Error in handleClearConversationUnread:", error);
+  }
+};
 io.use(protectSocket);
 
 io.on("connection", (socket) => {
@@ -360,6 +403,9 @@ io.on("connection", (socket) => {
       });
     }
   });
+  socket.on("clearConversationUnread", (args) =>
+    handleClearConversationUnread(args, socket),
+  );
 });
 
 export { io, server, app };

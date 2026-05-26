@@ -3,7 +3,7 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import type { Attachment } from "@/core/types/schema";
-import { generateCDN_URL } from "@/core/utils/generalFunctions";
+import { generateCDN_URL } from "@/core/utils/general-functions";
 import { useTranslation } from "react-i18next";
 import VideoAttachment from "./video-attachment";
 import ImageAttachment from "./image-attachment";

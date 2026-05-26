@@ -11,6 +11,7 @@ import {
   isScrolledAwayFromBottom,
   scrollMessageWrapperToBottom,
 } from "../utils";
+import { clearConversationUnread } from "../utils/chat-functions";
 
 const isOwnMessage = (message: IMessage): boolean => {
   const authUserId = userAuthStore.getState().authUser?._id;
@@ -34,8 +35,9 @@ export const handleMessageNotification = (message: IMessage) => {
   if (isSelectedConversation) {
     const wrapper = getMessageWrapperElement();
     if (!wrapper) return;
-    const isScrolledAway = isScrolledAwayFromBottom(wrapper)
+    const isScrolledAway = isScrolledAwayFromBottom(wrapper);
     if (!isScrolledAway) {
+      clearConversationUnread(conversation._id);
       scrollMessageWrapperToBottom();
       return;
     }

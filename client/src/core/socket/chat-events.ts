@@ -3,6 +3,7 @@ import { axiosInstance } from "@/core/utils";
 import userChatStore from "@/core/store/user-chat-store";
 import userPresenceStore from "@/core/store/user-presense-store";
 import type { IConversation, IMessage } from "@/core/types/schema";
+import { clearConversationUnread } from "@/core/utils/chat-functions";
 
 const timeoutMap = new Map<string, number>();
 const TYPING_RECEIVE_CLEANUP_MS = 4000;
@@ -187,7 +188,6 @@ export const HANDLE_RECEIVE_NEW_MESSAGE = async (message: IMessage, newConversat
   }
 };
 
-
-
-
-
+export const HANDLE_CONVERSATION_UNREAD_CLEARED = (conversationId: string) => {
+  clearConversationUnread(conversationId, true);
+};

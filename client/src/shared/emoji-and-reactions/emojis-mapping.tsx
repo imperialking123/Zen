@@ -1,4 +1,4 @@
-import { getEmojiUrl } from "@/core/utils/chatFunctions";
+import { getEmojiUrl } from "@/core/utils/chat-functions";
 
 import { Flex, Grid, Input, InputGroup, Text } from "@chakra-ui/react";
 import { useState, useEffect, useMemo, useCallback, type ChangeEvent } from "react";

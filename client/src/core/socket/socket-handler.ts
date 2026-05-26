@@ -5,7 +5,7 @@ import type {
   IConversation,
   IMessage,
 } from "@/core/types/schema";
-import { HANDLE_NEW_TYPING, HANDLE_RECEIVE_NEW_MESSAGE } from "./chat-events";
+import { HANDLE_NEW_TYPING, HANDLE_RECEIVE_NEW_MESSAGE, HANDLE_CONVERSATION_UNREAD_CLEARED } from "./chat-events";
 import {
   HANDLE_ADD_CONNECTION_PING,
   HANDLE_ADD_NEW_CONNECTION,
@@ -40,7 +40,12 @@ type TypingReceiveEvent = {
 type ReceiveMessageEvent = {
   type: "RECEIVE_MESSAGE";
   message: IMessage;
-  newConversation?: IConversation
+  newConversation?: IConversation;
+};
+
+type ConversationUnreadClearedEvent = {
+  type: "CONVERSATION_UNREAD_CLEARED";
+  conversationId: string;
 };
 
 type ADD_EVENT_CASES_TYPES =
@@ -48,7 +53,8 @@ type ADD_EVENT_CASES_TYPES =
   | AddNewConnectionEvent
   | AddNewPresenseEvent
   | TypingReceiveEvent
-  | ReceiveMessageEvent;
+  | ReceiveMessageEvent
+  | ConversationUnreadClearedEvent;
 
 // REMOVE EVENT TYPES
 type RemoveConnectionEvent = {
@@ -57,7 +63,7 @@ type RemoveConnectionEvent = {
 };
 
 type RemoveUserPresenceEvent = {
-  type: "REMOVE_USER_PRESENCE";
+  type: "REMOVE_USER_PRESENSE";
   userId: string;
 };
 
@@ -105,6 +111,10 @@ export const handleEventAdd = (args: ADD_EVENT_CASES_TYPES) => {
     case "RECEIVE_MESSAGE":
       void HANDLE_RECEIVE_NEW_MESSAGE(args.message, args.newConversation);
       break;
+
+    case "CONVERSATION_UNREAD_CLEARED":
+      HANDLE_CONVERSATION_UNREAD_CLEARED(args.conversationId);
+      break;
   }
 };
 
@@ -118,7 +128,7 @@ export const handleEventRemove = (args: REMOVE_EVENT_CASES_TYPES) => {
       HANDLE_REMOVE_CONNECTION(args.documentId);
       break;
 
-    case "REMOVE_USER_PRESENCE":
+    case "REMOVE_USER_PRESENSE":
       HANDLE_REMOVE_USER_PRESENSE(args.userId);
       break;
 
@@ -145,8 +155,3 @@ export const handleEventUpdate = (args: UPDATE_EVENT_CASES_TYPES) => {
       break;
   }
 };
-
-
-
-
-

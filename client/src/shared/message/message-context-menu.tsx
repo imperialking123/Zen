@@ -1,6 +1,6 @@
 import type { MessageActionTranslations } from "@/core/types";
 import type { IMessage } from "@/core/types/schema";
-import { getEmojiUrl } from "@/core/utils/chatFunctions";
+import { getEmojiUrl } from "@/core/utils/chat-functions";
 import { Flex, Separator } from "@chakra-ui/react";
 import {
   useEffect,

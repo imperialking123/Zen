@@ -1,4 +1,4 @@
-import { getEmojiUrl } from "@/core/utils/chatFunctions";
+import { getEmojiUrl } from "@/core/utils/chat-functions";
 import { Flex, Text } from "@chakra-ui/react";
 
 // P2P

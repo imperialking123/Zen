@@ -1,5 +1,5 @@
 import { Flex, FormatByte, LocaleProvider, Text } from "@chakra-ui/react";
-import { generateCDN_URL } from "@/core/utils/generalFunctions";
+import { generateCDN_URL } from "@/core/utils/general-functions";
 import { getDocumentIcon } from "../../message-input-ui";
 import { HiDownload } from "react-icons/hi";
 import { Tooltip } from "@/components/ui/tooltip";

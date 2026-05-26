@@ -10,7 +10,8 @@ const translate = i18next.getFixedT(null, "chat");
 import isToday from "dayjs/plugin/isToday";
 import isYesterday from "dayjs/plugin/isYesterday";
 import userChatStore from "@/core/store/user-chat-store";
-import { axiosInstance } from "../utils";
+import userAuthStore from "@/core/store/user-auth-store";
+import { axiosInstance } from ".";
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -79,19 +80,45 @@ export const formatDateSimpleStyle = (createdAt: string | Date) => {
   return returnString;
 };
 
+export const clearConversationUnread = (conversationId: string, skipSocketEmit = false) => {
+  const myId = userAuthStore.getState().authUser?._id;
+  if (!myId) return;
+
+  const conversation = userChatStore.getState().conversations.find((c) => c._id === conversationId);
+  if (!conversation) return;
+
+
+  if (!skipSocketEmit) {
+    const socket = userAuthStore.getState().socket;
+    if (socket) {
+      socket.emit("clearConversationUnread", { conversationId });
+    }
+  }
+
+  userChatStore.setState((state) => ({
+    conversations: state.conversations.map((c) =>
+      c._id === conversationId
+        ? { ...c, unreadCount: { ...c.unreadCount, [myId]: 0 } }
+        : c
+    ),
+  }));
+};
+
 export const getMessages = async (conversationId: string) => {
   userChatStore.setState({ isGettingMessages: true });
+
   try {
     if (!conversationId) return;
+
+    const conversation = userChatStore.getState().conversations.find((c) => c._id === conversationId);
+    if (!conversation) return;
+
+    clearConversationUnread(conversationId);
 
     const alreadyFetched =
       userChatStore.getState().conversationMessagesFetchHistory.includes(conversationId);
 
     if (alreadyFetched) return;
-
-    const conversation = userChatStore.getState().conversations.find((c) => c._id === conversationId);
-
-    if (!conversation) return;
 
     type GetMessageResponse = {
       messages: IMessage[],
@@ -115,8 +142,7 @@ export const getMessages = async (conversationId: string) => {
         conversationId
       ],
     }));
-  } catch (error) {
-    console.log("Message Fetch Failed")
+  } catch {
   } finally {
     userChatStore.setState({ isGettingMessages: false });
   }

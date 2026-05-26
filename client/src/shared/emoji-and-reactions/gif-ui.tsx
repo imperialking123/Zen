@@ -9,7 +9,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { FaSearch } from "react-icons/fa";
 import debounce from "lodash.debounce";
-import { SearchGiphy } from "@/core/utils/chatFunctions";
+import { SearchGiphy } from "@/core/utils/chat-functions";
 import { type GifData } from "@/core/types";
 import { GrLinkPrevious } from "react-icons/gr";
 import { RiEmotionSadLine } from "react-icons/ri";
