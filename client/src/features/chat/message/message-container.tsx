@@ -71,7 +71,7 @@ const MessageContainer = () => {
 
 
   const [isSidePanelOpen, setIsSidePanelOpen] = useState<boolean | "default">("default")
-  const [sidePanelUI, setSidePanelUI] = useState<ChatSidePanelUIType>("profile");
+  const [sidePanelUI] = useState<ChatSidePanelUIType>("profile");
 
 
   if (!selectedConversation) {
